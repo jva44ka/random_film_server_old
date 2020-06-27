@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -34,6 +35,7 @@ namespace randomfilm_backend
             // Определяем контекст тут
             services.AddDbContext<Models.RandomFilmDBContext>(options => options.UseSqlServer(FilmsDbConnection));
             services.AddScoped<DbContext, RandomFilmDBContext>();
+            services.AddAutoMapper(typeof(Startup));
 
             // Add service and create Policy with options
             services.AddCors(options =>

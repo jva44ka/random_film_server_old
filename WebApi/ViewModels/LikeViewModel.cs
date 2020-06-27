@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace randomfilm_backend.Models.Entities
+namespace randomfilm_backend.ViewModels
 {
-    public partial class Like
+    public class LikeViewModel
     {
         public int Id { get; set; }
         public int FilmId { get; set; }
