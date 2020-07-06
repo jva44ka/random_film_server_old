@@ -1,7 +1,7 @@
 using NUnit.Framework;
-using randomfilm_backend.Models;
+using WebApi.Models;
 
-namespace randomfilm_backend.Tests
+namespace WebApi.Tests
 {
     [TestFixture]
     public class FimsDbContextTests

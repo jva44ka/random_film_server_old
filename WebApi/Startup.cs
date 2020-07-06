@@ -10,12 +10,19 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
-using randomfilm_backend.Models;
+using Core;
+using Infrastructure.Auth;
+using Core.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
+using Infrastructure.Repositories.Interfaces;
+using Infrastructure.Repositories;
 
-namespace randomfilm_backend
+namespace WebApi
 {
     public class Startup
     {
+        private readonly string _nameOfSpecificOrigins = "corsPolicy";
         public Startup(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -24,56 +31,80 @@ namespace randomfilm_backend
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services, IWebHostEnvironment environment)
         {
             services.AddMvc(options => options.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
                 .AddNewtonsoftJson(x => x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
 
-            // получаем строку подключения из файла конфигурации
-            string FilmsDbConnection = Configuration.GetConnectionString("FilmsDBConnection");
-            // Определяем контекст тут
-            services.AddDbContext<Models.RandomFilmDBContext>(options => options.UseSqlServer(FilmsDbConnection));
-            services.AddScoped<DbContext, RandomFilmDBContext>();
+            // dbContext
+            services.AddDbContext<DbMainContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("FilmsDBConnection"),
+                    b => b.MigrationsAssembly("WebApi")));
+            //services.AddScoped<DbContext, DbMainContext>();
+
+            // automapper
             services.AddAutoMapper(typeof(Startup));
 
-            // Add service and create Policy with options
+            // cors
             services.AddCors(options =>
             {
-                options.AddPolicy("CorsPolicy", builder =>
-                    builder.SetIsOriginAllowed(_ => true)
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .AllowCredentials()
-                    );
+                options.AddPolicy(name: _nameOfSpecificOrigins, builder =>
+                builder.WithOrigins(Configuration.GetValue<string>("webClientPath"))
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .AllowCredentials()
+                            );
             });
 
-            //Аутентификация
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                    .AddJwtBearer(options =>
+            // repos
+            services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
+
+            // managers
+
+            // auth
+            services.AddIdentity<Account, IdentityRole>(options =>
+            {
+                // IMPORTANT! after changing password validations options, change "password-confirmation-form.component" in client accordingly
+                options.Password.RequireNonAlphanumeric = false;
+                options.Password.RequiredLength = 8;
+                options.User.RequireUniqueEmail = false;
+                options.User.AllowedUserNameCharacters =
+                    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+/";
+            })
+                .AddEntityFrameworkStores<DbMainContext>()
+                .AddDefaultTokenProviders();
+            services.AddHttpContextAccessor();
+            services.AddIdentityServer()
+                .AddApiAuthorization<Account, DbMainContext>();
+            services.AddAuthentication(o =>
+            {
+                o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddIdentityServerJwt()
+                .AddJwtBearer(options =>
+                {
+                    options.RequireHttpsMetadata = !environment.IsDevelopment();
+                    options.TokenValidationParameters = new TokenValidationParameters
                     {
-                        // false - без SSL
-                        options.RequireHttpsMetadata = false;
-                        options.TokenValidationParameters = new TokenValidationParameters
-                        {
-                            // укзывает, будет ли валидироваться издатель при валидации токена
-                            ValidateIssuer = true,
-                            // строка, представляющая издателя
-                            ValidIssuer = AuthOptions.ISSUER,
+                        // укзывает, будет ли валидироваться издатель при валидации токена
+                        ValidateIssuer = true,
+                        // строка, представляющая издателя
+                        ValidIssuer = AuthOptions.ISSUER,
 
-                            // будет ли валидироваться потребитель токена
-                            ValidateAudience = true,
-                            // установка потребителя токена
-                            ValidAudience = AuthOptions.AUDIENCE,
-                            // будет ли валидироваться время существования
-                            ValidateLifetime = true,
+                        // будет ли валидироваться потребитель токена
+                        ValidateAudience = true,
+                        // установка потребителя токена
+                        ValidAudience = AuthOptions.AUDIENCE,
+                        // будет ли валидироваться время существования
+                        ValidateLifetime = true,
 
-                            // установка ключа безопасности
-                            IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
-                            // валидация ключа безопасности
-                            ValidateIssuerSigningKey = true,
-                        };
-                    });
+                        // установка ключа безопасности
+                        IssuerSigningKey = AuthOptions.GetSymmetricSecurityKey(),
+                        // валидация ключа безопасности
+                        ValidateIssuerSigningKey = true
+                    };
+                });
 
             services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
@@ -91,13 +122,19 @@ namespace randomfilm_backend
                 app.UseHsts();
             }
 
-            //app.UseHttpsRedirection();
-            //Аутентификация
+            app.UseHttpsRedirection();
             app.UseAuthentication();
+            app.UseIdentityServer();
+            app.UseRouting();
+            app.UseEndpoints(endps =>
+            {
+                endps.MapControllers();
+            });
+
             app.UseMvc();
 
             //cors
-            app.UseCors("CorsPolicy");
+            app.UseCors(_nameOfSpecificOrigins);
         }
     }
 }

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <AssemblyName>Infrastructure</AssemblyName>
+    <RootNamespace>Infrastructure</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Repositories - Копировать\**" />
+    <EmbeddedResource Remove="Repositories - Копировать\**" />
+    <None Remove="Repositories - Копировать\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.IdentityModel.Tokens" Version="6.7.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.7.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Core\Core.csproj" />
+  </ItemGroup>
+
+</Project>

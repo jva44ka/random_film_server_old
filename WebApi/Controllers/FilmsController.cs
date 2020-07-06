@@ -1,154 +1,112 @@
 ﻿using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authorization;
 
-using randomfilm_backend.Models;
 using Microsoft.AspNetCore.Cors;
-using randomfilm_backend.Models.Entities;
-using randomfilm_backend.Models.Algorithms;
+using WebApi.ViewModels;
+using System;
+using Infrastructure.Managers.Interfaces;
+using AutoMapper;
+using Core.Models;
 
-namespace randomfilm_backend.Controllers
+namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     [EnableCors("CorsPolicy")]
     public class FilmsController : ControllerBase
     {
-        private readonly RandomFilmDBContext db;
+        private readonly IFilmManager _filmManager;
+        private readonly IMapper _mapper;
 
-        public FilmsController(RandomFilmDBContext context)
+        public FilmsController(IFilmManager filmManager, IMapper mapper)
         {
-            db = context;
+            _filmManager = filmManager;
+            _mapper = mapper;
         }
 
         // GET: api/Films
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Film>>> GetFilms()
+        public async Task<IList<FilmViewModel>> GetFilms()
         {
-            return await db.Films
-                        .Include(x => x.Likes)
-                        .Include(x => x.FilmsGenres)
-                            .ThenInclude(x => x.Genre) 
-                        .Where(x => x.FilmsGenres.FirstOrDefault(y => y.FilmId == x.Id) != null)
-                        .ToArrayAsync();
+            var films = await this._filmManager.GetAllFilms();
+            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+            return result;
         }
 
         // GET: api/Films/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Film>> GetFilm(int id)
+        public async Task<ActionResult<FilmViewModel>> GetFilm(Guid id)
         {
-            Film film = await db.Films
-                                .Include(x => x.Likes)
-                                .Include(x => x.FilmsGenres)
-                                    .ThenInclude(x => x.Genre)
-                                .Where(x => x.FilmsGenres.FirstOrDefault(y => y.FilmId == x.Id) != null)
-                                .FirstOrDefaultAsync((findingFilm) => findingFilm.Id == id);
+            var film = await this._filmManager.GetFilmById(id);
 
             if (film == null)
             {
                 return NotFound();
             }
 
-            return film;
+            var result = _mapper.Map<Film, FilmViewModel>(film);
+            return result;
         }
 
         // GET: api/Films/Random
         [HttpGet("Random")]
-        public async Task<ActionResult<IEnumerable<Film>>> GetRandomFilms()
+        public async Task<IList<FilmViewModel>> GetRandomFilms()
         {
-            RandomAlgorithm alg = new RandomAlgorithm(db);
-            //В конструктор передается пустой аккаунт просто как заглушка потому, что в интерфейсе IFilmSelection есть сигнатура метода с параметром
-            return await alg.GetFilmsAsync(new Account());
+            var films = await this._filmManager.GetRandomShakedFilms();
+            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+            return result;
         }
 
         [HttpGet("Specificity")]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Film>>> GetSpecificityFilms()
+        public async Task<IList<FilmViewModel>> GetSpecificityFilms()
         {
-            Account thisUser = await db.Accounts.FirstOrDefaultAsync(x => x.Login == this.HttpContext.User.Identity.Name);
-            SameUsersAlgorithm alg = new SameUsersAlgorithm(db);
-            List<Film> result = await alg.GetFilmsAsync(thisUser);
+            var films = await this._filmManager.GetSpicifityFilms(HttpContext.User.Identity.Name);
+            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
             return result;
-        }
-
-        // PUT: api/Films/5
-        [HttpPut("{id}")]
-        [Authorize(Roles = "admin")]
-        public async Task<IActionResult> PutFilm(int id, Film film)
-        {
-            if (id != film.Id)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(film).State = EntityState.Modified;
-
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!FilmExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
         }
 
         // POST: api/Films
         [HttpPost]
-        [Authorize(Roles = "admin")]
-        public async Task<ActionResult<Film>> PostFilm([FromBody] Film film)
+        [Authorize]
+        public async Task<ActionResult<Film>> PostFilm([FromBody] FilmViewModel filmViewModel)
         {
-            db.Films.Add(film);
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (FilmExists(film.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var film = _mapper.Map<FilmViewModel, Film>(filmViewModel);
+            var newFilm = await _filmManager.CreateAsync(film);
 
-            return Ok(film);
+            var result = _mapper.Map<Film, FilmViewModel>(newFilm);
+            return Ok(result);
+        }
+
+        // PUT: api/Films/5
+        [HttpPut("{id}")]
+        [Authorize]
+        public async Task<ActionResult<FilmViewModel>> PutFilm(Guid id, FilmViewModel filmViewModel)
+        {
+            if (id != filmViewModel.Id)
+                return BadRequest();
+
+            var film = _mapper.Map<FilmViewModel, Film>(filmViewModel);
+            var newFilm = await _filmManager.UpdateAsync(id, film);
+            if (newFilm == null)
+                return NotFound();
+
+            var result = _mapper.Map<Film, FilmViewModel>(newFilm);
+            return Ok(result);
         }
 
         // DELETE: api/Films/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "admin")]
-        public async Task<ActionResult<Film>> DeleteFilm(int id)
+        [Authorize]
+        public async Task<ActionResult<bool>> DeleteFilm(Guid id)
         {
-            var film = await db.Films.FirstOrDefaultAsync((findingFilm) => findingFilm.Id == id);
-            if (film == null)
-            {
-                return NotFound();
-            }
-            db.Films.Remove(film);
-            await db.SaveChangesAsync();
-
-            return film;
-        }
-
-        private bool FilmExists(int id)
-        {
-            return db.Films.Any(e => e.Id == id);
+            var result = await _filmManager.DeleteAsync(id);
+            if (result)
+                return Ok();
+            else
+                return BadRequest();
         }
     }
 }

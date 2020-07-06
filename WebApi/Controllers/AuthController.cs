@@ -8,10 +8,10 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using randomfilm_backend.Models;
-using randomfilm_backend.Models.Entities;
+using WebApi.Models;
+using WebApi.Models.Entities;
 
-namespace randomfilm_backend.Controllers
+namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

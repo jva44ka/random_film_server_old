@@ -1,4 +1,4 @@
-﻿using Core.Models.Interfaces;
+﻿using Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -27,7 +27,7 @@ namespace Core.Models
         public Account ModifiedBy { get; set; }
 
         public virtual ICollection<Comment> Comments { get; set; }
-        public virtual ICollection<FilmsGenres> FilmsGenres { get; set; }
+        public virtual ICollection<FilmGenre> FilmsGenres { get; set; }
         public virtual ICollection<Like> Likes { get; set; }
     }
 }

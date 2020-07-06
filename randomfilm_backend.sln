@@ -3,13 +3,13 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi", ""WebApi\WebApi.csproj", "{7486451A-863D-434D-B0EA-41F56FEB2E71}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApi", "WebApi\WebApi.csproj", "{7486451A-863D-434D-B0EA-41F56FEB2E71}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Tests", "Tests\Tests.csproj", "{8E28B715-B094-4581-A313-4111DE53C602}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Core", "Core\Core.csproj", "{B0736C86-1A67-4AD7-9AE2-DAB35CEBEBB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Core", "Core\Core.csproj", "{B0736C86-1A67-4AD7-9AE2-DAB35CEBEBB9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "App", "App\App.csproj", "{0E1B54D2-A93B-4D03-99AF-3956E1B1012B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Infrastructure", "App\Infrastructure.csproj", "{0E1B54D2-A93B-4D03-99AF-3956E1B1012B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

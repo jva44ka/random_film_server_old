@@ -11,11 +11,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Newtonsoft.Json;
-using randomfilm_backend;
-using randomfilm_backend.Models;
-using randomfilm_backend.Models.Entities;
+using WebApi;
+using Core.Models;
 
-namespace randomfilm_backend.Controllers
+namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -31,7 +30,7 @@ namespace randomfilm_backend.Controllers
 
         // GET: api/Accounts
         [HttpGet]
-        [Authorize(Roles = "admin")]
+        [Authorize]
         public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
         {
             return await db.Accounts.ToListAsync();
@@ -39,7 +38,6 @@ namespace randomfilm_backend.Controllers
 
         // GET: api/Accounts/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "admin")]
         public async Task<ActionResult<Account>> GetAccount(int id)
         {
             var account = await db.Accounts.FindAsync(id);
@@ -54,7 +52,6 @@ namespace randomfilm_backend.Controllers
 
         // GET: api/Accounts/Self
         [HttpGet("Self")]
-        [Authorize]
         public async Task<ActionResult<Account>> GetAccount()
         {
             Account account = await db.Accounts.

@@ -1,14 +1,13 @@
-﻿using randomfilm_backend.Models.Entities;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace randomfilm_backend.ViewModels
+namespace WebApi.ViewModels
 {
     public class FilmViewModel
     {
-        public int Id { get; set; }
+        public Guid Id { get; set; }
         public string Title { get; set; }
         public TimeSpan? Duration { get; set; }
         public string Description { get; set; }
@@ -16,6 +15,6 @@ namespace randomfilm_backend.ViewModels
         public string Director { get; set; }
         public string UrlImg { get; set; }
         public string UrlTrailer { get; set; }
-        public ICollection<Genre> Genres { get; set; }
+        public ICollection<GenreViewModel> Genres { get; set; }
     }
 }

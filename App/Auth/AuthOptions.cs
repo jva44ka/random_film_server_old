@@ -1,7 +1,7 @@
 ﻿using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
-namespace randomfilm_backend.Models
+namespace Infrastructure.Auth
 {
     public class AuthOptions
     {

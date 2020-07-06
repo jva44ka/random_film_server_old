@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.ApiAuthorization.IdentityServer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 
-namespace Core
+namespace Infrastructure.Data
 {
     public class DbMainContext : ApiAuthorizationDbContext<Account>
     {
@@ -37,7 +37,6 @@ namespace Core
 
             modelBuilder.Entity<FilmGenre>().HasOne(x => x.Film);
             modelBuilder.Entity<FilmGenre>().HasOne(x => x.Genre);
-
 
             base.OnModelCreating(modelBuilder);
         }

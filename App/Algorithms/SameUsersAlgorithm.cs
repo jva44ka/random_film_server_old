@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
-using randomfilm_backend.Models.Entities;
-using System;
+﻿using Infrastructure.Algorithms.Interfaces;
+using Core.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Core.Interfaces;
 
-namespace randomfilm_backend.Models.Algorithms
+namespace Infrastructure.Algorithms
 {
     /// <summary>
     /// Алгоритм выдачи фильма с учетом предпочтений пользователя
@@ -13,20 +14,26 @@ namespace randomfilm_backend.Models.Algorithms
     /// какое-то число соседей (k) и смотрит какие у этих соседей общие лайкнутые фильмы, которые не лайкнул исходный пользователь.
     /// Если не находит берет рандомный из лайкнутых соседями но не лайкнутый пользователем.
     /// </summary>
-    public class SameUsersAlgorithm : IFilmSelection
+    public class SameUsersAlgorithm : IFilmSelector
     {
         // Количество ближайших соседей
         private const int k = 1;
 
-        private RandomFilmDBContext db;
+        private Account[] _accountsCache;
+        private Film[] _filmsCache;
+        private Like[] _likesCache;
 
-        private Account[] accountsCache;
-        private Film[] filmsCache;
-        private Like[] likesCache;
+        private IRepository<Account> _accountsRepo;
+        private IRepository<Film> _filmsRepo;
+        private IRepository<Like> _likesRepo;
 
-        public SameUsersAlgorithm(RandomFilmDBContext db)
+        public SameUsersAlgorithm(IRepository<Account> accounts,
+                                    IRepository<Film> films,
+                                    IRepository<Like> likes)
         {
-            this.db = db;
+            this._accountsRepo = accounts;
+            this._filmsRepo = films;
+            this._likesRepo = likes;
         }
 
         /// <summary>
@@ -39,12 +46,15 @@ namespace randomfilm_backend.Models.Algorithms
             List<Film> result;
 
             // 0. Вытаскивыние базы в кеш
-            accountsCache = await this.db.Accounts.Include(x => x.Likes)
+            _accountsCache = await _accountsRepo.GetAll()
+                                        .Include(x => x.Likes)
                                         .ToArrayAsync();
-            filmsCache = await this.db.Films.Include(x => x.Likes)
+            _filmsCache = await _filmsRepo.GetAll()
+                                    .Include(x => x.Likes)
                                     .ToArrayAsync();
-            likesCache = await this.db.Likes.Include(x => x.Film)
-                                    .ToArrayAsync();
+            _likesCache = await _likesRepo.GetAll().Include(x => x.Film)
+                                                    .Include(x => x.Owner)
+                                                    .ToArrayAsync();
 
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
             Dictionary<Account, int> usersMatches = GetUsersWithSameLakes(user);
@@ -58,9 +68,9 @@ namespace randomfilm_backend.Models.Algorithms
             result = SelectFilms(user, nearestToUser);
 
             /* 4. Удаление из переменных класса ссылок на объекты таблиц для удаления сборщиком мусора*/
-            accountsCache = null;
-            filmsCache = null;
-            likesCache = null;
+            _accountsCache = null;
+            _filmsCache = null;
+            _likesCache = null;
 
             return result;
         }
@@ -73,28 +83,28 @@ namespace randomfilm_backend.Models.Algorithms
         private Dictionary<Account, int> GetUsersWithSameLakes(Account user)
         {
             // Ищем лайкнутые фильмы пользователя
-            Like[] userLikes = likesCache.Where(x => x.AccountId == user.Id).ToArray();
+            Like[] userLikes = _likesCache.Where(x => x.Owner.Id == user.Id).ToArray();
             List<Film> filmsLikedByUser = new List<Film>();
             for (int i = 0; i < userLikes.Length; i++)
             {
-                filmsLikedByUser.Add(filmsCache.FirstOrDefault(x => x.Id == userLikes[i].FilmId));
+                filmsLikedByUser.Add(_filmsCache.FirstOrDefault(x => x.Id == userLikes[i].Film.Id));
             }
 
             // Ищем совпадения лайков с другими пользователями
             Dictionary<Account, int> result = new Dictionary<Account, int>();
             int matches = 0;
             Like sameLike;
-            for (int i = 0; i < accountsCache.Length; i++)
+            for (int i = 0; i < _accountsCache.Length; i++)
             {
-                if (accountsCache[i].Id == user.Id)
+                if (_accountsCache[i].Id == user.Id)
                     continue;
                 for (int k = 0; k < filmsLikedByUser.Count; k++)
                 {
-                    sameLike = likesCache.FirstOrDefault(x => (x.AccountId == accountsCache[i].Id) && (x.FilmId == filmsLikedByUser[k].Id));
-                    if ((sameLike != null) && (sameLike.LikeOrDislike == userLikes[k].LikeOrDislike))
+                    sameLike = _likesCache.FirstOrDefault(x => (x.Owner.Id == _accountsCache[i].Id) && (x.Film.Id == filmsLikedByUser[k].Id));
+                    if ((sameLike != null) && (sameLike.IsLike == userLikes[k].IsLike))
                         matches++;
                 }
-                result.Add(accountsCache[i], matches);
+                result.Add(_accountsCache[i], matches);
                 matches = 0;
             }
             return result;
@@ -122,11 +132,11 @@ namespace randomfilm_backend.Models.Algorithms
                 rating = 0;
                 for (int k = 0; k < nearestToUser.Keys.Count; k++)
                 {
-                    Like like = likesCache.FirstOrDefault(x => (x.FilmId == notLikedFilmsByUser[i].Id) &&
-                                    (x.AccountId == nearestToUser.Keys.ElementAt(k).Id));
+                    Like like = _likesCache.FirstOrDefault(x => (x.Film.Id == notLikedFilmsByUser[i].Id) &&
+                                    (x.Owner.Id == nearestToUser.Keys.ElementAt(k).Id));
                     if (like != null)
                     {
-                        if (like.LikeOrDislike)
+                        if (like.IsLike)
                             rating++;
 
                         else
@@ -160,10 +170,10 @@ namespace randomfilm_backend.Models.Algorithms
         /// <returns>Коллекция оцененных фильмов</returns>
         private Film[] GetLikedFilmsByUser(Account user)
         {
-            Like[] likesByUser = likesCache.Where(x => x.AccountId == user.Id).ToArray();
+            Like[] likesByUser = _likesCache.Where(x => x.Owner.Id == user.Id).ToArray();
             List<Film> filmsLikedByUser = new List<Film>();
             foreach (var item in likesByUser)
-                filmsLikedByUser.Add(filmsCache.FirstOrDefault(x => x.Id == item.FilmId));
+                filmsLikedByUser.Add(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));
 
             return filmsLikedByUser.ToArray();
         }
@@ -175,10 +185,10 @@ namespace randomfilm_backend.Models.Algorithms
         /// <returns>Коллекция оцененных фильмов</returns>
         private Film[] GetNotLikedFilmsByUser (Account user)
         {
-            Like[] likesByUser = likesCache.Where(x => x.AccountId == user.Id).ToArray();
-            List<Film> filmsNotLikedByUser = new List<Film>(filmsCache);
+            Like[] likesByUser = _likesCache.Where(x => x.Owner.Id == user.Id).ToArray();
+            List<Film> filmsNotLikedByUser = new List<Film>(_filmsCache);
             foreach (var item in likesByUser)
-                filmsNotLikedByUser.Remove(filmsCache.FirstOrDefault(x => x.Id == item.FilmId));
+                filmsNotLikedByUser.Remove(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));
 
             return filmsNotLikedByUser.ToArray();
         }
