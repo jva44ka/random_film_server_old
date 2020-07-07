@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Data.Repositories
@@ -21,6 +22,11 @@ namespace Infrastructure.Data.Repositories
         public IQueryable<TEntity> GetAll()
         {
             return DbEntities.AsNoTracking();
+        }
+
+        public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> expression)
+        {
+            return DbEntities.AsNoTracking().Where(expression);
         }
 
         public TEntity GetById(Guid id, bool asUnmodified = false)
@@ -47,13 +53,14 @@ namespace Infrastructure.Data.Repositories
             return result;
         }
 
-        public TEntity Create(TEntity item)
-        {
-            return DbEntities.Add(item).Entity;
-        }
         public void CreateRange(IEnumerable<TEntity> items)
         {
             DbEntities.AddRange(items);
+        }
+
+        public TEntity Create(TEntity item)
+        {
+            return DbEntities.Add(item).Entity;
         }
 
         public async Task<TEntity> CreateAsync(TEntity item)

@@ -28,7 +28,6 @@ namespace Core
 
             modelBuilder.Entity<Like>().HasOne(x => x.Owner);
             modelBuilder.Entity<Like>().HasOne(x => x.Film);
-            modelBuilder.Entity<Like>().HasOne(x => x.CreatedBy);
 
             modelBuilder.Entity<Comment>().HasOne(x => x.Film);
             modelBuilder.Entity<Comment>().HasOne(x => x.Owner);

@@ -1,5 +1,6 @@
 ﻿using Core.Interfaces;
 using Core.Models;
+using Infrastructure.Exceptions;
 using Infrastructure.Managers.Interfaces;
 using Infrastructure.Models;
 using Microsoft.AspNetCore.Identity;
@@ -48,8 +49,7 @@ namespace Infrastructure.Managers
         {
             var result = await CreateAsync(user, password);
             if (!result.Succeeded)
-                throw new Exception("Auth exception");
-                //throw new IdentityUserException(result);
+                throw new IdentityCreateException("Auth exception");
 
             if (signInAfter)
             {

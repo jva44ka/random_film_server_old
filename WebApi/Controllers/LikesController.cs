@@ -1,13 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AutoMapper;
+using Core.Models;
+using Infrastructure.Managers.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using WebApi.Models;
-using WebApi.Models.Entities;
+using WebApi.ViewModels;
 
 namespace WebApi.Controllers
 {
@@ -16,122 +18,77 @@ namespace WebApi.Controllers
     [EnableCors("CorsPolicy")]
     public class LikesController : ControllerBase
     {
-        private readonly RandomFilmDBContext db;
+        private readonly ILikeManager _likeManager;
+        private readonly IMapper _mapper;
 
-        public LikesController(RandomFilmDBContext context)
+        public LikesController(ILikeManager likeManager, IMapper mapper)
         {
-            db = context;
+            this._likeManager = likeManager;
+            this._mapper = mapper;
         }
 
         // GET: api/Likes
         [HttpGet]
-        [Authorize(Roles = "admin")]
-        public async Task<ActionResult<IEnumerable<Like>>> GetLikes()
+        public IList<LikeViewModel> GetLikes()
         {
-            return await db.Likes.ToListAsync();
+            var likes = _likeManager.GetLikes();
+            var result = _mapper.Map<IList<Like>, IList<LikeViewModel>>(likes);
+            return result;
         }
 
         // GET: api/Likes/5
         [HttpGet("{id}")]
-        [Authorize(Roles = "admin")]
-        public async Task<ActionResult<Like>> GetLike(int id)
+        [Authorize]
+        public async Task<ActionResult<LikeViewModel>> GetLike(Guid id)
         {
-            var like = await db.Likes.FindAsync(id);
-
-            if (like == null)
-            {
-                return NotFound();
-            }
-
-            return like;
+            var like = _likeManager.GetLikeById(id);
+            var result = _mapper.Map<Like, LikeViewModel>(like);
+            return result;
         }
 
         // GET: api/Likes/ByFilm/5
         [HttpGet("ByFilm/{filmId}")]
         [Authorize]
-        public async Task<ActionResult<Like>> GetLikeByFilm(int filmId)
+        public LikeViewModel GetLikeByFilm(Guid filmId)
         {
-            var account = await db.Accounts.FirstOrDefaultAsync(x => x.Login == this.HttpContext.User.Identity.Name);
-            var like = await db.Likes.FirstOrDefaultAsync((x) => x.FilmId == filmId && x.AccountId == account.Id);
-
-            return like;
+            var like = _likeManager.GetLikeByFilm(HttpContext.User.Identity.Name, filmId);
+            var result = _mapper.Map<Like, LikeViewModel>(like);
+            return result;
         }
 
         // POST: api/Likes
         [HttpPost]
         [Authorize]
-        public async Task<ActionResult<Like>> PostLike([FromBody]Like requestLike)
+        public async Task<LikeViewModel> PostLike(LikeViewModel likeViewModel)
         {
-            //Лайк уже существует?
-            if (db.Likes.FirstOrDefault(x => (x.FilmId == requestLike.FilmId) && 
-                (x.AccountId == db.Accounts.FirstOrDefault(y => y.Login == HttpContext.User.Identity.Name).Id)) != null)
-            {
-                //Пользователь пытается поставить существующий лайк
-                return Conflict();
-            }
-
-            Like like = new Like
-            {
-                FilmId = requestLike.FilmId,
-                AccountId = db.Accounts.FirstOrDefault(x => x.Login == HttpContext.User.Identity.Name).Id,
-                LikeOrDislike = requestLike.LikeOrDislike,
-            };
-            db.Likes.Add(like);
-            await db.SaveChangesAsync();
-
-            return CreatedAtAction("GetLike", new { id = like.Id }, like);
+            var newlike = _mapper.Map<LikeViewModel, Like>(likeViewModel);
+            var createdLike = await _likeManager.CreateAsync(newlike);
+            var result = _mapper.Map<Like, LikeViewModel>(createdLike);
+            return result;
         }
 
         // DELETE: api/Likes/ByFilm/5
         [HttpDelete("ByFilm/{filmId}")]
         [Authorize]
-        public async Task<ActionResult> DeleteLikeByFilm(int filmId)
+        public async Task<ActionResult> DeleteLikeByFilm(Guid filmId)
         {
-            var like = db.Likes.FirstOrDefault(x => (x.FilmId == filmId) && 
-                (x.AccountId == db.Accounts.FirstOrDefault(y => y.Login == HttpContext.User.Identity.Name).Id));
-            if (like == null)
-            {
-                return NotFound();
-            }
-
-            if (HttpContext.User.Identity.Name != db.Accounts.FirstOrDefault(x => x.Id == like.AccountId).Login)
-            {
-                //Пользователь пытается удалить не свой лайк
-                return Conflict();
-            }
-
-            db.Likes.Remove(like);
-            await db.SaveChangesAsync();
-
-            return Ok();
+            var deletingResult = await _likeManager.DeleteByFilmAsync(HttpContext.User.Identity.Name, filmId);
+            if (deletingResult)
+                return Ok();
+            else
+                return BadRequest();
         }
 
         // DELETE: api/Likes/5
         [HttpDelete("{id}")]
         [Authorize]
-        public async Task<ActionResult<Like>> DeleteLike(int id)
+        public async Task<ActionResult> DeleteLike(Guid id)
         {
-            var like = await db.Likes.FindAsync(id);
-            if (like == null)
-            {
-                return NotFound();
-            }
-
-            if (HttpContext.User.Identity.Name != like.Account.Login)
-            {
-                //Пользователь пытается удалить не свой лайк
-                return Conflict();
-            }
-
-            db.Likes.Remove(like);
-            await db.SaveChangesAsync();
-
-            return Ok();
-        }
-
-        private bool LikeExists(int id)
-        {
-            return db.Likes.Any(e => e.Id == id);
+            var deletingResult = await _likeManager.DeleteAsync(id);
+            if (deletingResult)
+                return Ok();
+            else
+                return BadRequest();
         }
     }
 }

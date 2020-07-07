@@ -14,7 +14,6 @@ namespace Core.Models
         public bool IsLike { get; set; }
         [Required]
         public DateTime? CreatedOn { get; set; }
-        public Account CreatedBy { get; set; }
 
 
         public virtual Account Owner { get; set; }
