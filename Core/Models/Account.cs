@@ -15,9 +15,10 @@ namespace Core.Models
         public string FirstName { get; set; }
         public string LastName { get; set; }
         [Required]
-        public string Login { get; set; }
+        public override string UserName { get; set; }
         public bool IsMainAdmin { get; set; }
         public DateTime? LastSeenOn { get; set; }
+        [Required]
         public DateTime? CreatedOn { get; set; }
         public Account CreatedBy { get; set; }
         public DateTime? ModifiedOn { get; set; }

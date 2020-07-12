@@ -25,14 +25,14 @@ namespace Infrastructure.Managers
             this._specifityFilmSelector = specifityFilmSelector;
         }
 
-        public async Task<IList<Film>> GetAllFilms()
+        public IList<Film> GetAllFilms()
         {
-            return await this._filmsRepo.GetAll().ToListAsync();
+            return this._filmsRepo.GetAll().ToList();
         }
 
-        public Task<Film> GetFilmById(Guid id)
+        public Film GetFilmById(Guid id)
         {
-            return Task.FromResult(_filmsRepo.GetAll().FirstOrDefault(x => x.Id == id));
+            return _filmsRepo.GetAll().FirstOrDefault(x => x.Id == id);
         }
 
         public async Task<IList<Film>> GetRandomShakedFilms()
@@ -60,6 +60,16 @@ namespace Infrastructure.Managers
             }
 
             return result.ToList();
+        }
+
+        public IList<Genre> GetGenres(Guid id)
+        {
+            return _filmsRepo.GetAll()
+                                .Include(x => x.FilmsGenres)
+                                    .ThenInclude(x => x.Genre)
+                                .SelectMany(x => x.FilmsGenres)
+                                .Select(x => x.Genre)
+                                .ToList();
         }
 
         public async Task<IList<Film>> GetSpicifityFilms(string userName)

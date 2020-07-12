@@ -7,9 +7,10 @@ namespace Infrastructure.Managers.Interfaces
 {
     public interface IFilmManager
     {
-        Task<IList<Film>> GetAllFilms();
-        Task<Film> GetFilmById(Guid id);
+        IList<Film> GetAllFilms();
+        Film GetFilmById(Guid id);
         Task<IList<Film>> GetRandomShakedFilms();
+        IList<Genre> GetGenres(Guid id);
         Task<IList<Film>> GetSpicifityFilms(string userName);
         Task<Film> CreateAsync(Film film);
         Task<Film> UpdateAsync(Guid id, Film film);

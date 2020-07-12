@@ -8,8 +8,6 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using WebApi.Models;
-using WebApi.Models.Entities;
 
 namespace WebApi.Controllers
 {

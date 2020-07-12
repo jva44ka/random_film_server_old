@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using Newtonsoft.Json;
-using WebApi;
 using Core.Models;
+using WebApi.ViewModels.RequestModels;
+using WebApi.ViewModels.ResultModels;
+using Infrastructure.Exceptions;
+using Infrastructure.Managers.Interfaces;
+using AutoMapper;
+using WebApi.ViewModels;
 
 namespace WebApi.Controllers
 {
@@ -21,168 +19,93 @@ namespace WebApi.Controllers
     [EnableCors("CorsPolicy")]
     public class AccountsController : ControllerBase
     {
-        private readonly RandomFilmDBContext db;
+        private readonly IAccountManager<Account> _accountManager;
+        private readonly IMapper _mapper;
 
-        public AccountsController(RandomFilmDBContext context)
+        public AccountsController(IAccountManager<Account> accountManager, IMapper mapper)
         {
-            db = context;
+            _accountManager = accountManager;
+            _mapper = mapper;
         }
 
         // GET: api/Accounts
         [HttpGet]
         [Authorize]
-        public async Task<ActionResult<IEnumerable<Account>>> GetAccounts()
+        public async Task<IList<AccountViewModel>> GetAccounts()
         {
-            return await db.Accounts.ToListAsync();
+            var accounts = await _accountManager.GetAll();
+            return _mapper.Map<IList<Account>, IList<AccountViewModel>>(accounts);
         }
 
         // GET: api/Accounts/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Account>> GetAccount(int id)
+        public async Task<ActionResult<Account>> GetAccount(string id)
         {
-            var account = await db.Accounts.FindAsync(id);
+            var account = await _accountManager.GetUserById(id);
 
             if (account == null)
-            {
                 return NotFound();
-            }
 
             return account;
         }
 
-        // GET: api/Accounts/Self
-        [HttpGet("Self")]
-        public async Task<ActionResult<Account>> GetAccount()
+        // POST: api/Accounts/login
+        [HttpPost("login")]
+        public async Task<LoginResult> Login([FromBody]LoginRequest request)
         {
-            Account account = await db.Accounts.
-                FirstOrDefaultAsync(x => x.Login == this.HttpContext.User.Identity.Name);
+            if (string.IsNullOrEmpty(request?.UsernameOrEmail) || string.IsNullOrEmpty(request?.Password))
+                throw new MissingParametersException("request is null or contains empty param");
 
-            if (account == null)
+            var signInResult = await _accountManager.SignInAsync(request.UsernameOrEmail, request.Password);
+            var result = new LoginResult();
+            if (signInResult?.User != null && signInResult.SignInResult.Succeeded)
             {
-                return NotFound();
+                result.LoggedIn = true;
+                result.Token = _accountManager.GenerateToken(signInResult.User);
+                result.UserId = signInResult.User.Id;
             }
+            else if (signInResult?.SignInResult.IsLockedOut == true)
+                throw new LoginException("User is banned");
 
-            return account;
+            else
+            {
+                LoginException ex = new LoginException("Wrong username/password");
+                if (signInResult?.User != null)
+                    ex.AccessFailedCount = signInResult.User.AccessFailedCount;
+
+                throw ex;
+            }
+            return result;
         }
 
         // POST: api/Accounts/Create
-        [HttpPost("/Create")]
-        public async Task<ActionResult> CreateAccount([FromBody] Account account)
+        [HttpPost]
+        public async Task<AccountViewModel> CreateAccount([FromBody]CreateAccountRequest request)
         {
-            // Валидация полей (в емейле собака и точка, в пароле заглавные и цифры и т.д.)
-
-            // Создание нового аккаунта(user) на основе присланых данных (account)
-            Account newAccount = new Account()
-            {
-                Email = account.Email,
-                Login = account.Login,
-                Password = account.Password,
-                Role = await db.Roles.FirstOrDefaultAsync(x => x.Name == "user"),
-            };
-            db.Accounts.Add(newAccount);
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-                if (AccountExists(newAccount.Id))
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-            return Ok();
+            var newAccount = _mapper.Map<CreateAccountRequest, Account>(request);
+            var createdUser = await _accountManager.CreateUserAsync(newAccount, request.Password, request.SignInAfter);
+            var result = _mapper.Map<Account, AccountViewModel>(createdUser);
+            return result;
         }
 
         // PUT: api/Accounts/5
         [HttpPut("{id}")]
-        [Authorize(Roles = "admin")]
-        public async Task<IActionResult> PutAccount(int id, Account account)
-        {
-            if (id != account.Id)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(account).State = EntityState.Modified;
-
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!AccountExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // PUT: api/Accounts/Self
-        [HttpPut("Self")]
         [Authorize]
-        public async Task<IActionResult> PutAccount(Account account)
+        public async Task<ActionResult<AccountViewModel>> PutAccount(string id, AccountViewModel accountVM)
         {
-            if (db.Accounts.
-                FirstOrDefaultAsync(x => x.Login == this.HttpContext.User.Identity.Name) == null)
-            {
-                return BadRequest();
-            }
-
-            db.Entry(account).State = EntityState.Modified;
-
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                int id = db.Accounts.
-                    FirstOrDefaultAsync(x => x.Login == this.HttpContext.User.Identity.Name).Result.Id;
-                if (!AccountExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
+            var account = _mapper.Map<AccountViewModel, Account>(accountVM);
+            var updatedUser = await _accountManager.UpdateAsync(id, account);
+            var result = _mapper.Map<Account, AccountViewModel>(updatedUser);
+            return result;
         }
 
         // DELETE: api/Accounts/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "admin")]
-        public async Task<ActionResult<Account>> DeleteAccount(int id)
+        public async Task<ActionResult> DeleteAccount(string id)
         {
-            var account = await db.Accounts.FindAsync(id);
-            if (account == null)
-            {
-                return NotFound();
-            }
-
-            db.Accounts.Remove(account);
-            await db.SaveChangesAsync();
-
-            return account;
-        }
-
-        private bool AccountExists(int id)
-        {
-            return db.Accounts.Any(e => e.Id == id);
+            await _accountManager.DeleteAsync(id);
+            return Ok();
         }
     }
 }

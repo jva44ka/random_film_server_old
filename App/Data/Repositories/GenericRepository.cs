@@ -37,19 +37,15 @@ namespace Infrastructure.Data.Repositories
             return result;
         }
 
-        public async Task<TEntity> GetByIdAsync(Guid id, bool asUnmodified = false)
+        public async Task<TEntity> GetByIdAsync(Guid id)
         {
             var result = await DbEntities.FindAsync(id);
-            if (asUnmodified)
-                _context.Entry(result).State = EntityState.Unchanged;
             return result;
         }
 
-        public async Task<TEntity> GetByIdAsync(string id, bool asUnmodified = false)
+        public async Task<TEntity> GetByIdAsync(string id)
         {
             var result = await DbEntities.FindAsync(id);
-            if (asUnmodified)
-                _context.Entry(result).State = EntityState.Unchanged;
             return result;
         }
 
@@ -75,7 +71,7 @@ namespace Infrastructure.Data.Repositories
         public TEntity Update(TEntity item)
         {
             var result = DbEntities.Update(item).Entity;
-            //_context.Entry(item).State = EntityState.Modified;
+            _context.Entry(item).State = EntityState.Modified;
             return result;
         }
 

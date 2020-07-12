@@ -52,8 +52,4 @@
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="ViewModels\RequestModels\" />
-  </ItemGroup>
-
 </Project>

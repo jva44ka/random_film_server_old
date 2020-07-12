@@ -30,7 +30,7 @@ namespace WebApi.Controllers
         [HttpGet]
         public async Task<IList<FilmViewModel>> GetFilms()
         {
-            var films = await this._filmManager.GetAllFilms();
+            var films = this._filmManager.GetAllFilms();
             var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
             return result;
         }
@@ -39,7 +39,7 @@ namespace WebApi.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<FilmViewModel>> GetFilm(Guid id)
         {
-            var film = await this._filmManager.GetFilmById(id);
+            var film = this._filmManager.GetFilmById(id);
 
             if (film == null)
             {
