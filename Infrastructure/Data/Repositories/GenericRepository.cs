@@ -49,6 +49,22 @@ namespace Infrastructure.Data.Repositories
             return result;
         }
 
+        public async Task<TEntity> GetByIdAsync(Guid id, bool asUnmodified = false)
+        {
+            var result = await DbEntities.FindAsync(id);
+            if (asUnmodified)
+                _context.Entry(result).State = EntityState.Unchanged;
+            return result;
+        }
+
+        public async Task<TEntity> GetByIdAsync(string id, bool asUnmodified = false)
+        {
+            var result = await DbEntities.FindAsync(id);
+            if (asUnmodified)
+                _context.Entry(result).State = EntityState.Unchanged;
+            return result;
+        }
+
         public void CreateRange(IEnumerable<TEntity> items)
         {
             DbEntities.AddRange(items);

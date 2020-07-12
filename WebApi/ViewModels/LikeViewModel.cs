@@ -7,7 +7,6 @@ namespace WebApi.ViewModels
         public Guid Id { get; set; }
         public bool IsLike { get; set; }
         public DateTime? CreatedOn { get; set; }
-        public AccountViewModel CreatedBy { get; set; }
 
         public virtual AccountViewModel Owner { get; set; }
         public virtual FilmViewModel Film { get; set; }

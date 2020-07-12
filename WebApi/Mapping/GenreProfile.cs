@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using Core.Models;
-using System;
 using WebApi.ViewModels;
 
 namespace WebApi.Mapping

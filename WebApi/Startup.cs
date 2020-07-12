@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -13,10 +15,12 @@ using Microsoft.IdentityModel.Tokens;
 using Core;
 using Infrastructure.Auth;
 using Core.Models;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication;
-using Infrastructure.Repositories.Interfaces;
-using Infrastructure.Repositories;
+using Core.Interfaces;
+using Infrastructure.Data.Repositories;
+using Infrastructure.Managers.Interfaces;
+using Infrastructure.Managers;
+using Infrastructure.Algorithms.Interfaces;
+using Infrastructure.Algorithms;
 
 namespace WebApi
 {
@@ -61,6 +65,10 @@ namespace WebApi
             services.AddScoped(typeof(IRepository<>), typeof(GenericRepository<>));
 
             // managers
+            services.AddScoped<IAccountManager<Account>, AccountManager>();
+            services.AddScoped<IFilmManager, FilmManager>();
+            services.AddScoped<ILikeManager, LikeManager>();
+            services.AddScoped<IFilmSelector, SameUsersAlgorithm>();
 
             // auth
             services.AddIdentity<Account, IdentityRole>(options =>

@@ -17,20 +17,6 @@ namespace WebApi.Mapping
                 .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
                 .ForMember(dest => dest.Director, opt => opt.MapFrom(src => src.Director))
                 .ForMember(dest => dest.UrlImg, opt => opt.MapFrom(src => src.UrlImg))
-#warning разобраться с тем как лучше мапить кростаблицу
-                /*.AfterMap((src, targ) =>
-                {
-                    targ.FilmsGenres = new List<FilmsGenres>();
-                    if (src.Genres != null)
-                    {
-                        foreach (var genre in src.Genres)
-                            targ.FilmsGenres.Add(new FilmsGenres
-                            {
-                                Film = targ,
-                                Genre = genre
-                            });
-                    }
-                })*/
                 .IncludeAllDerived()
                 .MaxDepth(2);
 
