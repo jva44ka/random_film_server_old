@@ -12,10 +12,10 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
 
-using Core;
 using Infrastructure.Auth;
 using Core.Models;
 using Core.Interfaces;
+using Infrastructure.Data;
 using Infrastructure.Data.Repositories;
 using Infrastructure.Managers.Interfaces;
 using Infrastructure.Managers;
@@ -43,8 +43,8 @@ namespace WebApi
 
             // dbContext
             services.AddDbContext<DbMainContext>(options =>
-                options.UseSqlServer(Configuration.GetConnectionString("FilmsDBConnection"),
-                    b => b.MigrationsAssembly("WebApi")));
+                options.UseSqlServer(Configuration.GetConnectionString("MainDBConnection"),
+                    b => b.MigrationsAssembly("Infrastructure")));
             //services.AddScoped<DbContext, DbMainContext>();
 
             // automapper

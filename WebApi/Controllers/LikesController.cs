@@ -14,7 +14,6 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [EnableCors("CorsPolicy")]
     public class LikesController : ControllerBase
     {
         private readonly ILikeManager _likeManager;

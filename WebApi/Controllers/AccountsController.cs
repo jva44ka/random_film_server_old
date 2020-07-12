@@ -16,7 +16,6 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [EnableCors("CorsPolicy")]
     public class AccountsController : ControllerBase
     {
         private readonly IAccountManager<Account> _accountManager;

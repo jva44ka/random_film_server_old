@@ -14,7 +14,6 @@ namespace WebApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [EnableCors("CorsPolicy")]
     public class FilmsController : ControllerBase
     {
         private readonly IFilmManager _filmManager;
