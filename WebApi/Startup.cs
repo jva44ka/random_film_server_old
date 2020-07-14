@@ -21,13 +21,14 @@ using Infrastructure.Managers.Interfaces;
 using Infrastructure.Managers;
 using Infrastructure.Algorithms.Interfaces;
 using Infrastructure.Algorithms;
+using IdentityServer4.Stores;
 
 namespace WebApi
 {
     public class Startup
     {
         private readonly string _nameOfSpecificOrigins = "corsPolicy";
-        public Startup(IConfiguration configuration)
+        public Startup(IConfiguration configuration, IWebHostEnvironment environment)
         {
             Configuration = configuration;
         }
@@ -35,7 +36,7 @@ namespace WebApi
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services, IWebHostEnvironment environment)
+        public void ConfigureServices(IServiceCollection services)
         {
             services.AddMvc(options => options.EnableEndpointRouting = false)
                 .SetCompatibilityVersion(CompatibilityVersion.Version_3_0)
@@ -92,7 +93,7 @@ namespace WebApi
                 .AddIdentityServerJwt()
                 .AddJwtBearer(options =>
                 {
-                    options.RequireHttpsMetadata = !environment.IsDevelopment();
+                    options.RequireHttpsMetadata = true;
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         // укзывает, будет ли валидироваться издатель при валидации токена
@@ -134,6 +135,7 @@ namespace WebApi
             app.UseAuthentication();
             app.UseIdentityServer();
             app.UseRouting();
+            app.UseAuthorization();
             app.UseEndpoints(endps =>
             {
                 endps.MapControllers();
