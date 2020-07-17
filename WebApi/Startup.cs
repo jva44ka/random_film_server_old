@@ -21,7 +21,6 @@ using Infrastructure.Managers.Interfaces;
 using Infrastructure.Managers;
 using Infrastructure.Algorithms.Interfaces;
 using Infrastructure.Algorithms;
-using IdentityServer4.Stores;
 
 namespace WebApi
 {

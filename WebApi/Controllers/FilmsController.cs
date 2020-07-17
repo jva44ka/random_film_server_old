@@ -69,7 +69,6 @@ namespace WebApi.Controllers
 
         // POST: api/Films
         [HttpPost]
-        [Authorize]
         public async Task<ActionResult<Film>> PostFilm([FromBody] FilmViewModel filmViewModel)
         {
             var film = _mapper.Map<FilmViewModel, Film>(filmViewModel);

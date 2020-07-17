@@ -80,6 +80,7 @@ namespace Infrastructure.Managers
 
         public async Task<Film> CreateAsync(Film film)
         {
+            film.CreatedOn = DateTime.UtcNow;
             var newFilm = await _filmsRepo.CreateAsync(film);
             await _filmsRepo.SaveAsync();
             return newFilm;
