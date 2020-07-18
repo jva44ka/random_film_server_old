@@ -8,8 +8,8 @@ namespace Core.Interfaces
 {
     public interface IRepository<T> where T : class
     {
-        IQueryable<T> GetAll();
-        IQueryable<T> GetAll(Expression<Func<T, bool>> expression);
+        IQueryable<T> GetAll(bool asNoTracking = false);
+        IQueryable<T> GetAll(Expression<Func<T, bool>> expression, bool asNoTracking = false);
         T GetById(Guid id, bool asUnmodified = false);
         Task<T> GetByIdAsync(Guid id, bool asUnmodified = false);
         Task<T> GetByIdAsync(string id, bool asUnmodified = false);

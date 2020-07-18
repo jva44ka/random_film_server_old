@@ -5,14 +5,14 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Models
 {
-    [Table("FilmGenres")]
-    public class FilmGenre : IDataModel
+    [Table("Images")]
+    public class Image : IDataModel
     {
         [Key, Required]
         public Guid Id { get; set; }
+        public DateTime? CreatedOn { get; set; }
+        public DateTime? ModifiedOn { get; set; }
         [Required]
-        public virtual Film Film { get; set; }
-        [Required]
-        public virtual Genre Genre { get; set; }
+        public string Data { get; set; }
     }
 }

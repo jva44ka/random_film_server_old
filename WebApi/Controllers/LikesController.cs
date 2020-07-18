@@ -30,7 +30,7 @@ namespace WebApi.Controllers
         public IList<LikeViewModel> GetLikes()
         {
             var likes = _likeManager.GetLikes();
-            var result = _mapper.Map<IList<Like>, IList<LikeViewModel>>(likes);
+            var result = _mapper.Map<IList<UserFilm>, IList<LikeViewModel>>(likes);
             return result;
         }
 
@@ -40,7 +40,7 @@ namespace WebApi.Controllers
         public async Task<ActionResult<LikeViewModel>> GetLike(Guid id)
         {
             var like = _likeManager.GetLikeById(id);
-            var result = _mapper.Map<Like, LikeViewModel>(like);
+            var result = _mapper.Map<UserFilm, LikeViewModel>(like);
             return result;
         }
 
@@ -50,7 +50,7 @@ namespace WebApi.Controllers
         public LikeViewModel GetLikeByFilm(Guid filmId)
         {
             var like = _likeManager.GetLikeByFilm(HttpContext.User.Identity.Name, filmId);
-            var result = _mapper.Map<Like, LikeViewModel>(like);
+            var result = _mapper.Map<UserFilm, LikeViewModel>(like);
             return result;
         }
 
@@ -59,9 +59,9 @@ namespace WebApi.Controllers
         [Authorize]
         public async Task<LikeViewModel> PostLike(LikeViewModel likeViewModel)
         {
-            var newlike = _mapper.Map<LikeViewModel, Like>(likeViewModel);
+            var newlike = _mapper.Map<LikeViewModel, UserFilm>(likeViewModel);
             var createdLike = await _likeManager.CreateAsync(newlike);
-            var result = _mapper.Map<Like, LikeViewModel>(createdLike);
+            var result = _mapper.Map<UserFilm, LikeViewModel>(createdLike);
             return result;
         }
 

@@ -19,14 +19,20 @@ namespace Infrastructure.Data.Repositories
             DbEntities = context.Set<TEntity>();
         }
 
-        public IQueryable<TEntity> GetAll()
+        public IQueryable<TEntity> GetAll(bool asNoTracking = false)
         {
-            return DbEntities.AsNoTracking();
+            if (asNoTracking)
+                return DbEntities.AsNoTracking();
+            else
+                return DbEntities.AsTracking();
         }
 
-        public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> expression)
+        public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> expression, bool asNoTracking = false)
         {
-            return DbEntities.AsNoTracking().Where(expression);
+            if (asNoTracking)
+                return DbEntities.AsNoTracking().Where(expression);
+            else
+                return DbEntities.AsTracking().Where(expression);
         }
 
         public TEntity GetById(Guid id, bool asUnmodified = false)

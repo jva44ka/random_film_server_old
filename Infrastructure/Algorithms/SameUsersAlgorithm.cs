@@ -21,15 +21,15 @@ namespace Infrastructure.Algorithms
 
         private Account[] _accountsCache;
         private Film[] _filmsCache;
-        private Like[] _likesCache;
+        private UserFilm[] _likesCache;
 
         private IRepository<Account> _accountsRepo;
         private IRepository<Film> _filmsRepo;
-        private IRepository<Like> _likesRepo;
+        private IRepository<UserFilm> _likesRepo;
 
         public SameUsersAlgorithm(IRepository<Account> accounts,
                                     IRepository<Film> films,
-                                    IRepository<Like> likes)
+                                    IRepository<UserFilm> likes)
         {
             this._accountsRepo = accounts;
             this._filmsRepo = films;
@@ -53,7 +53,7 @@ namespace Infrastructure.Algorithms
                                     .Include(x => x.Likes)
                                     .ToArrayAsync();
             _likesCache = await _likesRepo.GetAll().Include(x => x.Film)
-                                                    .Include(x => x.Owner)
+                                                    .Include(x => x.User)
                                                     .ToArrayAsync();
 
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
@@ -83,7 +83,7 @@ namespace Infrastructure.Algorithms
         private Dictionary<Account, int> GetUsersWithSameLakes(Account user)
         {
             // Ищем лайкнутые фильмы пользователя
-            Like[] userLikes = _likesCache.Where(x => x.Owner.Id == user.Id).ToArray();
+            UserFilm[] userLikes = _likesCache.Where(x => x.User.Id == user.Id).ToArray();
             List<Film> filmsLikedByUser = new List<Film>();
             for (int i = 0; i < userLikes.Length; i++)
             {
@@ -93,14 +93,14 @@ namespace Infrastructure.Algorithms
             // Ищем совпадения лайков с другими пользователями
             Dictionary<Account, int> result = new Dictionary<Account, int>();
             int matches = 0;
-            Like sameLike;
+            UserFilm sameLike;
             for (int i = 0; i < _accountsCache.Length; i++)
             {
                 if (_accountsCache[i].Id == user.Id)
                     continue;
                 for (int k = 0; k < filmsLikedByUser.Count; k++)
                 {
-                    sameLike = _likesCache.FirstOrDefault(x => (x.Owner.Id == _accountsCache[i].Id) && (x.Film.Id == filmsLikedByUser[k].Id));
+                    sameLike = _likesCache.FirstOrDefault(x => (x.User.Id == _accountsCache[i].Id) && (x.Film.Id == filmsLikedByUser[k].Id));
                     if ((sameLike != null) && (sameLike.IsLike == userLikes[k].IsLike))
                         matches++;
                 }
@@ -132,11 +132,11 @@ namespace Infrastructure.Algorithms
                 rating = 0;
                 for (int k = 0; k < nearestToUser.Keys.Count; k++)
                 {
-                    Like like = _likesCache.FirstOrDefault(x => (x.Film.Id == notLikedFilmsByUser[i].Id) &&
-                                    (x.Owner.Id == nearestToUser.Keys.ElementAt(k).Id));
-                    if (like != null)
+                    UserFilm like = _likesCache.FirstOrDefault(x => (x.Film.Id == notLikedFilmsByUser[i].Id) &&
+                                    (x.User.Id == nearestToUser.Keys.ElementAt(k).Id));
+                    if (like != null && like.IsLike != null)
                     {
-                        if (like.IsLike)
+                        if ((bool)like.IsLike)
                             rating++;
 
                         else
@@ -170,7 +170,7 @@ namespace Infrastructure.Algorithms
         /// <returns>Коллекция оцененных фильмов</returns>
         private Film[] GetLikedFilmsByUser(Account user)
         {
-            Like[] likesByUser = _likesCache.Where(x => x.Owner.Id == user.Id).ToArray();
+            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id).ToArray();
             List<Film> filmsLikedByUser = new List<Film>();
             foreach (var item in likesByUser)
                 filmsLikedByUser.Add(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));
@@ -185,7 +185,7 @@ namespace Infrastructure.Algorithms
         /// <returns>Коллекция оцененных фильмов</returns>
         private Film[] GetNotLikedFilmsByUser (Account user)
         {
-            Like[] likesByUser = _likesCache.Where(x => x.Owner.Id == user.Id).ToArray();
+            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id).ToArray();
             List<Film> filmsNotLikedByUser = new List<Film>(_filmsCache);
             foreach (var item in likesByUser)
                 filmsNotLikedByUser.Remove(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));

@@ -5,18 +5,18 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Models
 {
-    [Table("Likes")]
-    public class Like : IDataModel
+    [Table("UserFilms")]
+    public class UserFilm : IDataModel
     {
         [Key, Required]
         public Guid Id { get; set; }
+        public bool? IsLike { get; set; }
         [Required]
-        public bool IsLike { get; set; }
+        public DateTime? ViewedOn { get; set; }
+
         [Required]
-        public DateTime? CreatedOn { get; set; }
-
-
-        public virtual Account Owner { get; set; }
+        public virtual Account User { get; set; }
+        [Required]
         public virtual Film Film { get; set; }
     }
 }
