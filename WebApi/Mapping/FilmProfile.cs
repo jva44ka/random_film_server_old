@@ -16,7 +16,6 @@ namespace WebApi.Mapping
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
                 .ForMember(dest => dest.Director, opt => opt.MapFrom(src => src.Director))
-                .ForMember(dest => dest.UrlImg, opt => opt.MapFrom(src => src.UrlImg))
                 .IncludeAllDerived()
                 .MaxDepth(2);
 
@@ -27,7 +26,6 @@ namespace WebApi.Mapping
                 .ForMember(dest => dest.Description, opt => opt.MapFrom(src => src.Description))
                 .ForMember(dest => dest.Year, opt => opt.MapFrom(src => src.Year))
                 .ForMember(dest => dest.Director, opt => opt.MapFrom(src => src.Director))
-                .ForMember(dest => dest.UrlImg, opt => opt.MapFrom(src => src.UrlImg))
                 .ForMember(dest => dest.Genres, opt => opt.MapFrom(src => src.FilmsGenres.Select(x => x.Genre)))
                 .IncludeAllDerived()
                 .MaxDepth(2);

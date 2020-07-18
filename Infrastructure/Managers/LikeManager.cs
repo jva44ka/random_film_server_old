@@ -12,11 +12,11 @@ namespace Infrastructure.Managers
 {
     public class LikeManager : ILikeManager
     {
-        private readonly IRepository<Like> _likeRepo;
+        private readonly IRepository<UserFilm> _likeRepo;
         private readonly IRepository<Account> _accountRepo;
         private readonly IRepository<Film> _filmRepo;
 
-        public LikeManager(IRepository<Like> likeRepo,
+        public LikeManager(IRepository<UserFilm> likeRepo,
                             IRepository<Account> accountRepo,
                             IRepository<Film> filmRepo)
         {
@@ -24,35 +24,35 @@ namespace Infrastructure.Managers
             this._accountRepo = accountRepo;
             this._filmRepo = filmRepo;
         }
-        public IList<Like> GetLikes() 
+        public IList<UserFilm> GetLikes() 
         {
-            return (IList<Like>)_likeRepo.GetAll().ToList();
+            return (IList<UserFilm>)_likeRepo.GetAll().ToList();
         }
 
-        public Like GetLikeById(Guid id) 
+        public UserFilm GetLikeById(Guid id) 
         {
             return _likeRepo.GetAll().FirstOrDefault(x => x.Id == id);
         }
 
-        public Like GetLikeByFilm(string userName, Guid filmId)
+        public UserFilm GetLikeByFilm(string userName, Guid filmId)
         {
             return _likeRepo.GetAll()
                             .Include(x => x.Film)
-                            .Include(x => x.Owner)
-                            .FirstOrDefault(x => x.Owner.UserName == userName && 
+                            .Include(x => x.User)
+                            .FirstOrDefault(x => x.User.UserName == userName && 
                                                 x.Film.Id == filmId);
         }
 
-        public async Task<Like> CreateAsync(Like like)
+        public async Task<UserFilm> CreateAsync(UserFilm like)
         {
-            var owner = _accountRepo.GetAll().FirstOrDefault(x => x.Id == like.Owner.Id);
+            var owner = _accountRepo.GetAll().FirstOrDefault(x => x.Id == like.User.Id);
             var film = _filmRepo.GetAll().FirstOrDefault(x => x.Id == like.Film.Id);
-            like.Owner = owner;
+            like.User = owner;
             like.Film = film;
 
             var sameLike = _likeRepo.GetAll().Include(x => x.Film)
-                                            .Include(x => x.Owner)
-                                            .FirstOrDefault(x => x.Film.Id == like.Film.Id && x.Owner.Id == like.Owner.Id);
+                                            .Include(x => x.User)
+                                            .FirstOrDefault(x => x.Film.Id == like.Film.Id && x.User.Id == like.User.Id);
 
             if(sameLike != null)
             {
@@ -64,7 +64,7 @@ namespace Infrastructure.Managers
                     return _likeRepo.Update(like);
             }
 
-            like.CreatedOn = DateTime.UtcNow;
+            like.ViewedOn = DateTime.UtcNow;
             return await _likeRepo.CreateAsync(like);
         }
 
@@ -73,9 +73,9 @@ namespace Infrastructure.Managers
             var owner = _accountRepo.GetAll().FirstOrDefault(x => x.UserName == userName);
             var like = _likeRepo.GetAll()
                                 .Include(x => x.Film)
-                                .Include(x => x.Owner)
+                                .Include(x => x.User)
                                 .FirstOrDefault(x => (x.Film.Id == filmId) &&
-                                                    (x.Owner.Id == owner.Id));
+                                                    (x.User.Id == owner.Id));
             if (like == null)
                 throw new NotExistsException("Like not exists for delete");
 

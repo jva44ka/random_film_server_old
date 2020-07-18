@@ -7,10 +7,10 @@ namespace Infrastructure.Managers.Interfaces
 {
     public interface ILikeManager
     {
-        IList<Like> GetLikes();
-        Like GetLikeById(Guid id);
-        Like GetLikeByFilm(string userName, Guid filmId);
-        Task<Like> CreateAsync(Like like);
+        IList<UserFilm> GetLikes();
+        UserFilm GetLikeById(Guid id);
+        UserFilm GetLikeByFilm(string userName, Guid filmId);
+        Task<UserFilm> CreateAsync(UserFilm like);
         Task<bool> DeleteByFilmAsync(string userName, Guid filmId);
         Task<bool> DeleteAsync(Guid id);
     }

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace WebApi.ViewModels
 {
@@ -13,7 +11,6 @@ namespace WebApi.ViewModels
         public string Description { get; set; }
         public DateTime? Year { get; set; }
         public string Director { get; set; }
-        public string UrlImg { get; set; }
         public string UrlTrailer { get; set; }
         public ICollection<GenreViewModel> Genres { get; set; }
     }

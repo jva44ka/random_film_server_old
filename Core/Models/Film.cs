@@ -17,7 +17,6 @@ namespace Core.Models
         public string Description { get; set; }
         public DateTime? Year { get; set; }
         public string Director { get; set; }
-        public string UrlImg { get; set; }
         public string UrlTrailer { get; set; }
 
         [Required]
@@ -26,8 +25,9 @@ namespace Core.Models
         public DateTime? ModifiedOn { get; set; }
         public Account ModifiedBy { get; set; }
 
+        public virtual Image Preview { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
         public virtual ICollection<FilmGenre> FilmsGenres { get; set; }
-        public virtual ICollection<Like> Likes { get; set; }
+        public virtual ICollection<UserFilm> Likes { get; set; }
     }
 }

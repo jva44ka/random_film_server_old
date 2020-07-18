@@ -17,17 +17,19 @@ namespace Infrastructure.Data
             modelBuilder.Entity<Account>().HasMany(c => c.Likes);
             modelBuilder.Entity<Account>().HasOne(c => c.CreatedBy);
             modelBuilder.Entity<Account>().HasOne(c => c.ModifiedBy);
+            modelBuilder.Entity<Account>().HasOne(c => c.Avatar);
 
             modelBuilder.Entity<Film>().HasMany(x => x.Likes);
             modelBuilder.Entity<Film>().HasMany(x => x.FilmsGenres);
             modelBuilder.Entity<Film>().HasMany(x => x.Likes);
             modelBuilder.Entity<Film>().HasOne(c => c.CreatedBy);
             modelBuilder.Entity<Film>().HasOne(c => c.ModifiedBy);
+            modelBuilder.Entity<Film>().HasOne(c => c.Preview);
 
             modelBuilder.Entity<Genre>();
 
-            modelBuilder.Entity<Like>().HasOne(x => x.Owner);
-            modelBuilder.Entity<Like>().HasOne(x => x.Film);
+            modelBuilder.Entity<UserFilm>().HasOne(x => x.User);
+            modelBuilder.Entity<UserFilm>().HasOne(x => x.Film);
 
             modelBuilder.Entity<Comment>().HasOne(x => x.Film);
             modelBuilder.Entity<Comment>().HasOne(x => x.Owner);
@@ -36,6 +38,10 @@ namespace Infrastructure.Data
 
             modelBuilder.Entity<FilmGenre>().HasOne(x => x.Film);
             modelBuilder.Entity<FilmGenre>().HasOne(x => x.Genre);
+
+            modelBuilder.Entity<UserSetting>();
+
+            modelBuilder.Entity<Image>();
 
             base.OnModelCreating(modelBuilder);
         }

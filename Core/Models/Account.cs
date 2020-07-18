@@ -24,7 +24,8 @@ namespace Core.Models
         public DateTime? ModifiedOn { get; set; }
         public Account ModifiedBy { get; set; }
 
+        public virtual Image Avatar { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
-        public virtual ICollection<Like> Likes { get; set; }
+        public virtual ICollection<UserFilm> Likes { get; set; }
     }
 }
