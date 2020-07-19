@@ -22,7 +22,7 @@ namespace WebApi.Mapping
                 .ForMember(dest => dest.ModifiedOn, opt => opt.MapFrom(src => src.ModifiedOn))
                 .ForMember(dest => dest.ModifiedBy, opt => opt.MapFrom(src => src.ModifiedBy))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments))
-                .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.Likes))
+                .ForMember(dest => dest.UserFilms, opt => opt.MapFrom(src => src.Likes))
                 .IncludeAllDerived()
                 .MaxDepth(2);
 
@@ -39,7 +39,7 @@ namespace WebApi.Mapping
                 .ForMember(dest => dest.ModifiedOn, opt => opt.MapFrom(src => src.ModifiedOn))
                 .ForMember(dest => dest.ModifiedBy, opt => opt.MapFrom(src => src.ModifiedBy))
                 .ForMember(dest => dest.Comments, opt => opt.MapFrom(src => src.Comments))
-                .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.Likes))
+                .ForMember(dest => dest.Likes, opt => opt.MapFrom(src => src.UserFilms))
                 .IncludeAllDerived()
                 .MaxDepth(2);
 

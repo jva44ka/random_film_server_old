@@ -67,7 +67,7 @@ namespace WebApi
             // managers
             services.AddScoped<IAccountManager<Account>, AccountManager>();
             services.AddScoped<IFilmManager, FilmManager>();
-            services.AddScoped<ILikeManager, LikeManager>();
+            services.AddScoped<IUserFilmManager, UserFilmManager>();
             services.AddScoped<IFilmSelector, SameUsersAlgorithm>();
 
             // auth

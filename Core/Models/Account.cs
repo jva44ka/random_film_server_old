@@ -26,6 +26,7 @@ namespace Core.Models
 
         public virtual Image Avatar { get; set; }
         public virtual ICollection<Comment> Comments { get; set; }
-        public virtual ICollection<UserFilm> Likes { get; set; }
+        public virtual ICollection<UserFilm> UserFilms { get; set; }
+        public virtual ICollection<UserSetting> UserSettings { get; set; }
     }
 }

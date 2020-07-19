@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Managers.Interfaces
 {
-    public interface ILikeManager
+    public interface IUserFilmManager
     {
         IList<UserFilm> GetLikes();
         UserFilm GetLikeById(Guid id);

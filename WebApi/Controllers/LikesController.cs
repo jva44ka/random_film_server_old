@@ -16,10 +16,10 @@ namespace WebApi.Controllers
     [ApiController]
     public class LikesController : ControllerBase
     {
-        private readonly ILikeManager _likeManager;
+        private readonly IUserFilmManager _likeManager;
         private readonly IMapper _mapper;
 
-        public LikesController(ILikeManager likeManager, IMapper mapper)
+        public LikesController(IUserFilmManager likeManager, IMapper mapper)
         {
             this._likeManager = likeManager;
             this._mapper = mapper;
