@@ -55,7 +55,7 @@ namespace Infrastructure.Algorithms
             List<Film> result;
 
             // 0. Вытаскивыние базы в кеш
-            accountsCache = await _accountsRepo.GetAll().Include(x => x.Likes)
+            accountsCache = await _accountsRepo.GetAll().Include(x => x.UserFilms)
                                         .ToArrayAsync();
             genresCache = await _genresRepo.GetAll().ToArrayAsync();
             filmsCache = await _filmsRepo.GetAll()

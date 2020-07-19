@@ -14,10 +14,11 @@ namespace Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<Account>().HasMany(c => c.Comments);
-            modelBuilder.Entity<Account>().HasMany(c => c.Likes);
+            modelBuilder.Entity<Account>().HasMany(c => c.UserFilms);
             modelBuilder.Entity<Account>().HasOne(c => c.CreatedBy);
             modelBuilder.Entity<Account>().HasOne(c => c.ModifiedBy);
             modelBuilder.Entity<Account>().HasOne(c => c.Avatar);
+            modelBuilder.Entity<Account>().HasMany(c => c.UserSettings);
 
             modelBuilder.Entity<Film>().HasMany(x => x.Likes);
             modelBuilder.Entity<Film>().HasMany(x => x.FilmsGenres);

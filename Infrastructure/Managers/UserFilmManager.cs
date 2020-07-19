@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace Infrastructure.Managers
 {
-    public class LikeManager : ILikeManager
+    public class UserFilmManager : IUserFilmManager
     {
         private readonly IRepository<UserFilm> _likeRepo;
         private readonly IRepository<Account> _accountRepo;
         private readonly IRepository<Film> _filmRepo;
 
-        public LikeManager(IRepository<UserFilm> likeRepo,
+        public UserFilmManager(IRepository<UserFilm> likeRepo,
                             IRepository<Account> accountRepo,
                             IRepository<Film> filmRepo)
         {

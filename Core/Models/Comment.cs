@@ -17,7 +17,9 @@ namespace Core.Models
         public DateTime? ModifiedOn { get; set; }
         public Account ModifiedBy { get; set; }
 
+        [Required]
         public Account Owner { get; set; }
+        [Required]
         public virtual Film Film { get; set; }
     }
 }
