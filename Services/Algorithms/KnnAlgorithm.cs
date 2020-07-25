@@ -3,11 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Infrastructure.Algorithms.Interfaces;
+using Services.Algorithms.Interfaces;
 using Core.Models;
 using Core.Interfaces;
 
-namespace Infrastructure.Algorithms
+namespace Services.Algorithms
 {
     /// <summary>
     /// Алгоритм выдачи фильма с учетом предпочтений пользователя (на основе метода ближайших k соседей)

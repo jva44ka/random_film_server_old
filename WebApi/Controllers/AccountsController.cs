@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Core.Models;
 using WebApi.ViewModels.RequestModels;
 using WebApi.ViewModels.ResultModels;
 using Infrastructure.Exceptions;
-using Infrastructure.Managers.Interfaces;
+using Services.Managers.Interfaces;
 using AutoMapper;
 using WebApi.ViewModels;
 

@@ -17,10 +17,10 @@ using Core.Models;
 using Core.Interfaces;
 using Infrastructure.Data;
 using Infrastructure.Data.Repositories;
-using Infrastructure.Managers.Interfaces;
-using Infrastructure.Managers;
-using Infrastructure.Algorithms.Interfaces;
-using Infrastructure.Algorithms;
+using Services.Managers.Interfaces;
+using Services.Managers;
+using Services.Algorithms.Interfaces;
+using Services.Algorithms;
 
 namespace WebApi
 {
@@ -45,7 +45,6 @@ namespace WebApi
             services.AddDbContext<DbMainContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("MainDBConnection"),
                     b => b.MigrationsAssembly("Infrastructure")));
-            //services.AddScoped<DbContext, DbMainContext>();
 
             // automapper
             services.AddAutoMapper(typeof(Startup));
@@ -73,7 +72,6 @@ namespace WebApi
             // auth
             services.AddIdentity<Account, IdentityRole>(options =>
             {
-                // IMPORTANT! after changing password validations options, change "password-confirmation-form.component" in client accordingly
                 options.Password.RequireNonAlphanumeric = false;
                 options.Password.RequiredLength = 8;
                 options.User.RequireUniqueEmail = false;

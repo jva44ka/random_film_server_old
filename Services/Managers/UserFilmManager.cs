@@ -1,14 +1,14 @@
 ﻿using Core.Interfaces;
 using Core.Models;
 using Infrastructure.Exceptions;
-using Infrastructure.Managers.Interfaces;
+using Services.Managers.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Infrastructure.Managers
+namespace Services.Managers
 {
     public class UserFilmManager : IUserFilmManager
     {

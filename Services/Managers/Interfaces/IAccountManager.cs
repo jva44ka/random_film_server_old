@@ -1,9 +1,9 @@
 ﻿using Core.Models;
-using Infrastructure.Models;
+using Services.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace Infrastructure.Managers.Interfaces
+namespace Services.Managers.Interfaces
 {
     public interface IAccountManager<TUser> where TUser : class
     {

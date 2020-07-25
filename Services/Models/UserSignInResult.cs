@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using System;
 
-namespace Infrastructure.Models
+namespace Services.Models
 {
     public class UserSignInResult<TUser>
     {

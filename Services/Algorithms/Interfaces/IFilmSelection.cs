@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core.Models;
 
-namespace Infrastructure.Algorithms.Interfaces
+namespace Services.Algorithms.Interfaces
 {
     public interface IFilmSelector
     {
