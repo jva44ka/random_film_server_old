@@ -1,14 +1,14 @@
 ﻿using Core.Interfaces;
 using Core.Models;
-using Infrastructure.Algorithms.Interfaces;
-using Infrastructure.Managers.Interfaces;
+using Services.Algorithms.Interfaces;
+using Services.Managers.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Infrastructure.Managers
+namespace Services.Managers
 {
     public class FilmManager : IFilmManager
     {

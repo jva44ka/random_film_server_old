@@ -2,8 +2,8 @@
 using Core.Models;
 using Infrastructure.Auth;
 using Infrastructure.Exceptions;
-using Infrastructure.Managers.Interfaces;
-using Infrastructure.Models;
+using Services.Models;
+using Services.Managers.Interfaces;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -14,7 +14,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-namespace Infrastructure.Managers
+namespace Services.Managers
 {
     public class AccountManager : UserManager<Account>, IAccountManager<Account>
     {

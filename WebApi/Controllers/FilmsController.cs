@@ -3,10 +3,9 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 
-using Microsoft.AspNetCore.Cors;
 using WebApi.ViewModels;
 using System;
-using Infrastructure.Managers.Interfaces;
+using Services.Managers.Interfaces;
 using AutoMapper;
 using Core.Models;
 
