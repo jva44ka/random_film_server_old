@@ -26,17 +26,17 @@ namespace Services.Managers
         }
         public IList<UserFilm> GetLikes() 
         {
-            return (IList<UserFilm>)_likeRepo.GetAll().ToList();
+            return (IList<UserFilm>)_likeRepo.Get().ToList();
         }
 
         public UserFilm GetLikeById(Guid id) 
         {
-            return _likeRepo.GetAll().FirstOrDefault(x => x.Id == id);
+            return _likeRepo.Get().FirstOrDefault(x => x.Id == id);
         }
 
         public UserFilm GetLikeByFilm(string userName, Guid filmId)
         {
-            return _likeRepo.GetAll()
+            return _likeRepo.Get()
                             .Include(x => x.Film)
                             .Include(x => x.User)
                             .FirstOrDefault(x => x.User.UserName == userName && 
@@ -45,12 +45,12 @@ namespace Services.Managers
 
         public async Task<UserFilm> CreateAsync(UserFilm like)
         {
-            var owner = _accountRepo.GetAll().FirstOrDefault(x => x.Id == like.User.Id);
-            var film = _filmRepo.GetAll().FirstOrDefault(x => x.Id == like.Film.Id);
+            var owner = _accountRepo.Get().FirstOrDefault(x => x.Id == like.User.Id);
+            var film = _filmRepo.Get().FirstOrDefault(x => x.Id == like.Film.Id);
             like.User = owner;
             like.Film = film;
 
-            var sameLike = _likeRepo.GetAll().Include(x => x.Film)
+            var sameLike = _likeRepo.Get().Include(x => x.Film)
                                             .Include(x => x.User)
                                             .FirstOrDefault(x => x.Film.Id == like.Film.Id && x.User.Id == like.User.Id);
 
@@ -70,8 +70,8 @@ namespace Services.Managers
 
         public async Task<bool> DeleteByFilmAsync(string userName, Guid filmId) 
         {
-            var owner = _accountRepo.GetAll().FirstOrDefault(x => x.UserName == userName);
-            var like = _likeRepo.GetAll()
+            var owner = _accountRepo.Get().FirstOrDefault(x => x.UserName == userName);
+            var like = _likeRepo.Get()
                                 .Include(x => x.Film)
                                 .Include(x => x.User)
                                 .FirstOrDefault(x => (x.Film.Id == filmId) &&
