@@ -46,13 +46,13 @@ namespace Services.Algorithms
             List<Film> result;
 
             // 0. Вытаскивыние базы в кеш
-            _accountsCache = await _accountsRepo.GetAll()
+            _accountsCache = await _accountsRepo.Get()
                                         .Include(x => x.UserFilms)
                                         .ToArrayAsync();
-            _filmsCache = await _filmsRepo.GetAll()
+            _filmsCache = await _filmsRepo.Get()
                                     .Include(x => x.Likes)
                                     .ToArrayAsync();
-            _likesCache = await _likesRepo.GetAll().Include(x => x.Film)
+            _likesCache = await _likesRepo.Get().Include(x => x.Film)
                                                     .Include(x => x.User)
                                                     .ToArrayAsync();
 

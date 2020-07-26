@@ -79,7 +79,6 @@ namespace WebApi.Controllers
 
         // PUT: api/Films/5
         [HttpPut("{id}")]
-        [Authorize]
         public async Task<ActionResult<FilmViewModel>> PutFilm(Guid id, FilmViewModel filmViewModel)
         {
             if (id != filmViewModel.Id)
@@ -96,7 +95,6 @@ namespace WebApi.Controllers
 
         // DELETE: api/Films/5
         [HttpDelete("{id}")]
-        [Authorize]
         public async Task<ActionResult<bool>> DeleteFilm(Guid id)
         {
             var result = await _filmManager.DeleteAsync(id);
