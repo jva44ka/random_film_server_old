@@ -35,7 +35,7 @@ namespace WebApi.Controllers
 
         // GET: api/Films/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<FilmViewModel>> GetFilm(Guid id)
+        public ActionResult<FilmViewModel> GetFilm(Guid id)
         {
             var film = this._filmManager.GetFilmById(id);
 

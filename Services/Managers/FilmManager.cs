@@ -27,12 +27,22 @@ namespace Services.Managers
 
         public IList<Film> GetAllFilms()
         {
-            return this._filmsRepo.Get().ToList();
+            return this._filmsRepo
+                .Get()
+                .Include(x => x.Preview)
+                .Include(x => x.FilmsGenres)
+                    .ThenInclude(x => x.Genre)
+                .ToList();
         }
 
         public Film GetFilmById(Guid id)
         {
-            return _filmsRepo.Get().FirstOrDefault(x => x.Id == id);
+            return _filmsRepo
+                .Get()
+                .Include(x => x.Preview)
+                .Include(x => x.FilmsGenres)
+                    .ThenInclude(x => x.Genre)
+                .FirstOrDefault(x => x.Id == id);
         }
 
         public async Task<IList<Film>> GetRandomShakedFilms()

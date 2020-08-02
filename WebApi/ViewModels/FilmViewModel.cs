@@ -12,6 +12,8 @@ namespace WebApi.ViewModels
         public DateTime? Year { get; set; }
         public string Director { get; set; }
         public string UrlTrailer { get; set; }
+        public string GenresText { get; set; }
         public ICollection<GenreViewModel> Genres { get; set; }
+        public string Preview { get; set; }
     }
 }
