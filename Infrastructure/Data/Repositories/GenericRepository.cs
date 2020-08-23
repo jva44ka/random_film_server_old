@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Data.Repositories
@@ -97,6 +96,11 @@ namespace Infrastructure.Data.Repositories
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public void Untrack(TEntity entity)
+        {
+            _context.Entry(entity).State = EntityState.Detached;
         }
     }
 }
