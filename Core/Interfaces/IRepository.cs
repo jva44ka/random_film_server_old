@@ -22,5 +22,6 @@ namespace Core.Interfaces
         void DeleteRange(IEnumerable<T> items);
         void Save();
         Task SaveAsync();
+        void Untrack(T entity);
     }
 }

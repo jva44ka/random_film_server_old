@@ -96,12 +96,25 @@ namespace Services.Managers
             return newFilm;
         }
 
-        public async Task<Film> UpdateAsync(Guid id, Film film)
+        public async Task<Film> UpdateAsync(Guid id, Film changedFilm)
         {
+            _filmsRepo.Untrack(changedFilm);
+
+            var film = _filmsRepo
+                .Get()
+                .AsTracking()
+                .Single(x => x.Id == id);
+
             film.ModifiedOn = DateTime.UtcNow;
-            var newFilm = _filmsRepo.Update(film);
+            film.Title = changedFilm.Title;
+            film.UrlTrailer = changedFilm.UrlTrailer;
+            film.Year = changedFilm.Year;
+            film.Description = changedFilm.Description;
+            film.Director = changedFilm.Director;
+            film.Duration = changedFilm.Duration;
+
             await _filmsRepo.SaveAsync();
-            return newFilm;
+            return film;
         }
 
         public async Task<bool> DeleteAsync(Guid id)

@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Services.Managers
 {
@@ -69,18 +70,17 @@ namespace Services.Managers
             return claims.GenerateJwtToken();
         }
 
-        public async Task<Account> CreateUserAsync(Account user, string password, bool signInAfter, bool persistentSignIn = true)
+        public async Task<IdentityResult> CreateUserAsync(Account user, string password, bool signInAfter, bool persistentSignIn = true)
         {
+            user.CreatedOn = DateTime.UtcNow;
             var result = await CreateAsync(user, password);
-            if (!result.Succeeded)
-                throw new IdentityCreateException("Auth exception");
 
             if (signInAfter)
             {
                 await SignInManager.SignInAsync(user, persistentSignIn);
             }
 
-            return await FindByIdAsync(user.Id);
+            return result;
         }
 
         public async Task<Account> UpdateAsync(string id, Account account)
