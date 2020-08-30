@@ -65,14 +65,14 @@ namespace WebApi.Controllers
             else if (signInResult?.SignInResult.IsLockedOut == true)
                 throw new LoginException("User is banned");
 
-            else
+            /*else
             {
                 LoginException ex = new LoginException("Wrong username/password");
                 if (signInResult?.User != null)
                     ex.AccessFailedCount = signInResult.User.AccessFailedCount;
 
                 throw ex;
-            }
+            }*/
             return result;
         }
 
