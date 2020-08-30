@@ -9,7 +9,7 @@ namespace WebApi.ViewModels.ResultModels
     {
         public bool LoggedIn { get; set; }
         public string ErrorMessage { get; set; }
-        public string Token { get; set; }
+        public string AccessToken { get; set; }
         public int AccessFailedCount { get; set; }
         public string UserId { get; set; }
     }
