@@ -59,30 +59,30 @@ namespace WebApi.Controllers
             if (signInResult?.User != null && signInResult.SignInResult.Succeeded)
             {
                 result.LoggedIn = true;
-                result.Token = _accountManager.GenerateToken(signInResult.User);
+                result.AccessToken = _accountManager.GenerateToken(signInResult.User);
                 result.UserId = signInResult.User.Id;
             }
             else if (signInResult?.SignInResult.IsLockedOut == true)
                 throw new LoginException("User is banned");
 
-            else
+            /*else
             {
                 LoginException ex = new LoginException("Wrong username/password");
                 if (signInResult?.User != null)
                     ex.AccessFailedCount = signInResult.User.AccessFailedCount;
 
                 throw ex;
-            }
+            }*/
             return result;
         }
 
         // POST: api/Accounts/Create
         [HttpPost]
-        public async Task<AccountViewModel> CreateAccount([FromBody]CreateAccountRequest request)
+        public async Task<ActionResult<string>> CreateAccount([FromBody]CreateAccountRequest request)
         {
             var newAccount = _mapper.Map<CreateAccountRequest, Account>(request);
-            var createdUser = await _accountManager.CreateUserAsync(newAccount, request.Password, request.SignInAfter);
-            var result = _mapper.Map<Account, AccountViewModel>(createdUser);
+            var registerResult = await _accountManager.CreateUserAsync(newAccount, request.Password, request.SignInAfter);
+            var result = new JsonResult(registerResult);
             return result;
         }
 

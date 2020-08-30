@@ -27,18 +27,28 @@ namespace Services.Managers
 
         public IList<Film> GetAllFilms()
         {
-            return this._filmsRepo.GetAll().ToList();
+            return this._filmsRepo
+                .Get()
+                .Include(x => x.Preview)
+                .Include(x => x.FilmsGenres)
+                    .ThenInclude(x => x.Genre)
+                .ToList();
         }
 
         public Film GetFilmById(Guid id)
         {
-            return _filmsRepo.GetAll().FirstOrDefault(x => x.Id == id);
+            return _filmsRepo
+                .Get()
+                .Include(x => x.Preview)
+                .Include(x => x.FilmsGenres)
+                    .ThenInclude(x => x.Genre)
+                .FirstOrDefault(x => x.Id == id);
         }
 
         public async Task<IList<Film>> GetRandomShakedFilms()
         {
             //Вытаскиваем бд в кеш
-            List<Film> filmsCache = await this._filmsRepo.GetAll()
+            List<Film> filmsCache = await this._filmsRepo.Get()
                                 .Include(x => x.Likes)
                                 .Include(x => x.FilmsGenres)
                                     .ThenInclude(x => x.Genre)
@@ -64,7 +74,7 @@ namespace Services.Managers
 
         public IList<Genre> GetGenres(Guid id)
         {
-            return _filmsRepo.GetAll()
+            return _filmsRepo.Get()
                                 .Include(x => x.FilmsGenres)
                                     .ThenInclude(x => x.Genre)
                                 .SelectMany(x => x.FilmsGenres)
@@ -74,7 +84,7 @@ namespace Services.Managers
 
         public async Task<IList<Film>> GetSpicifityFilms(string userName)
         {
-            var user = this._usersRepo.GetAll().FirstOrDefault(x => x.UserName == userName);
+            var user = this._usersRepo.Get().FirstOrDefault(x => x.UserName == userName);
             return await this._specifityFilmSelector.GetFilmsAsync(user);
         }
 
@@ -86,11 +96,25 @@ namespace Services.Managers
             return newFilm;
         }
 
-        public async Task<Film> UpdateAsync(Guid id, Film film)
+        public async Task<Film> UpdateAsync(Guid id, Film changedFilm)
         {
-            var newFilm = _filmsRepo.Update(film);
+            _filmsRepo.Untrack(changedFilm);
+
+            var film = _filmsRepo
+                .Get()
+                .AsTracking()
+                .Single(x => x.Id == id);
+
+            film.ModifiedOn = DateTime.UtcNow;
+            film.Title = changedFilm.Title;
+            film.UrlTrailer = changedFilm.UrlTrailer;
+            film.Year = changedFilm.Year;
+            film.Description = changedFilm.Description;
+            film.Director = changedFilm.Director;
+            film.Duration = changedFilm.Duration;
+
             await _filmsRepo.SaveAsync();
-            return newFilm;
+            return film;
         }
 
         public async Task<bool> DeleteAsync(Guid id)

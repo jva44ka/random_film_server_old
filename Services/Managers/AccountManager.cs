@@ -13,6 +13,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace Services.Managers
 {
@@ -43,23 +44,23 @@ namespace Services.Managers
 
         public async Task<IList<Account>> GetAll()
         {
-            return await _accountsRepo.GetAll().ToListAsync();
+            return await _accountsRepo.Get().ToListAsync();
         }
 
         public Task<Account> GetUserById(string id)
         {
-            return Task.FromResult(_accountsRepo.GetAll().FirstOrDefault(x => x.Id == id));
+            return Task.FromResult(_accountsRepo.Get().FirstOrDefault(x => x.Id == id));
         }
 
         public Task<bool> IsGlobalAdmin(string id)
         {
-            return Task.FromResult(_accountsRepo.GetAll().FirstOrDefault(x => x.Id == id).IsMainAdmin);
+            return Task.FromResult(_accountsRepo.Get().FirstOrDefault(x => x.Id == id).IsMainAdmin);
         }
 
         public async Task<UserSignInResult<Account>> SignInAsync(string usernameOrEmail, string password, bool persistentSignIn = true)
         {
             var result = await SignInManager.PasswordSignInAsync(usernameOrEmail, password, persistentSignIn, true);
-            var user = _accountsRepo.GetAll().FirstOrDefault(x => x.UserName == usernameOrEmail || x.Email == usernameOrEmail);
+            var user = _accountsRepo.Get().FirstOrDefault(x => x.UserName == usernameOrEmail || x.Email == usernameOrEmail);
             return new UserSignInResult<Account>(result) { User = user };
         }
 
@@ -69,23 +70,22 @@ namespace Services.Managers
             return claims.GenerateJwtToken();
         }
 
-        public async Task<Account> CreateUserAsync(Account user, string password, bool signInAfter, bool persistentSignIn = true)
+        public async Task<IdentityResult> CreateUserAsync(Account user, string password, bool signInAfter, bool persistentSignIn = true)
         {
+            user.CreatedOn = DateTime.UtcNow;
             var result = await CreateAsync(user, password);
-            if (!result.Succeeded)
-                throw new IdentityCreateException("Auth exception");
 
             if (signInAfter)
             {
                 await SignInManager.SignInAsync(user, persistentSignIn);
             }
 
-            return await FindByIdAsync(user.Id);
+            return result;
         }
 
         public async Task<Account> UpdateAsync(string id, Account account)
         {
-            var user = _accountsRepo.GetAll().FirstOrDefault(x => x.Id == id);
+            var user = _accountsRepo.Get().FirstOrDefault(x => x.Id == id);
             if (user == null)
                 throw new NotExistsException($"User {id} is not exists");
 
@@ -102,7 +102,7 @@ namespace Services.Managers
 
         public async Task DeleteAsync(string id)
         {
-            var user = _accountsRepo.GetAll().FirstOrDefault(x => x.Id == id);
+            var user = _accountsRepo.Get().FirstOrDefault(x => x.Id == id);
             if (user == null)
                 throw new NotExistsException($"User {id} is not exists");
 

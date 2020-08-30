@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Threading.Tasks;
 
 namespace Infrastructure.Data.Repositories
@@ -19,66 +18,39 @@ namespace Infrastructure.Data.Repositories
             DbEntities = context.Set<TEntity>();
         }
 
-        public IQueryable<TEntity> GetAll(bool asNoTracking = false)
+        public IQueryable<TEntity> Get()
         {
-            if (asNoTracking)
-                return DbEntities.AsNoTracking();
-            else
-                return DbEntities.AsTracking();
-        }
-
-        public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> expression, bool asNoTracking = false)
-        {
-            if (asNoTracking)
-                return DbEntities.AsNoTracking().Where(expression);
-            else
-                return DbEntities.AsTracking().Where(expression);
+                return DbEntities;
         }
 
         public TEntity GetById(Guid id, bool asUnmodified = false)
         {
-            var result = DbEntities.Find(id);
-            if (asUnmodified)
-                _context.Entry(result).State = EntityState.Unchanged;
-            return result;
+            return DbEntities.Find(id);
+        }
+
+        public TEntity GetById(string id)
+        {
+            return DbEntities.Find(id);
         }
 
         public async Task<TEntity> GetByIdAsync(Guid id)
         {
-            var result = await DbEntities.FindAsync(id);
-            return result;
+            return await DbEntities.FindAsync(id);
         }
 
         public async Task<TEntity> GetByIdAsync(string id)
         {
-            var result = await DbEntities.FindAsync(id);
-            return result;
-        }
-
-        public async Task<TEntity> GetByIdAsync(Guid id, bool asUnmodified = false)
-        {
-            var result = await DbEntities.FindAsync(id);
-            if (asUnmodified)
-                _context.Entry(result).State = EntityState.Unchanged;
-            return result;
-        }
-
-        public async Task<TEntity> GetByIdAsync(string id, bool asUnmodified = false)
-        {
-            var result = await DbEntities.FindAsync(id);
-            if (asUnmodified)
-                _context.Entry(result).State = EntityState.Unchanged;
-            return result;
-        }
-
-        public void CreateRange(IEnumerable<TEntity> items)
-        {
-            DbEntities.AddRange(items);
+            return await DbEntities.FindAsync(id);
         }
 
         public TEntity Create(TEntity item)
         {
             return DbEntities.Add(item).Entity;
+        }
+
+        public void CreateRange(IEnumerable<TEntity> items)
+        {
+            DbEntities.AddRange(items);
         }
 
         public async Task<TEntity> CreateAsync(TEntity item)
@@ -111,6 +83,11 @@ namespace Infrastructure.Data.Repositories
             DbEntities.Remove(item);
         }
 
+        public void DeleteRange(IEnumerable<TEntity> items)
+        {
+            DbEntities.RemoveRange(items);
+        }
+
         public void Save()
         {
             _context.SaveChanges();
@@ -119,6 +96,11 @@ namespace Infrastructure.Data.Repositories
         public async Task SaveAsync()
         {
             await _context.SaveChangesAsync();
+        }
+
+        public void Untrack(TEntity entity)
+        {
+            _context.Entry(entity).State = EntityState.Detached;
         }
     }
 }

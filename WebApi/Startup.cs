@@ -128,6 +128,9 @@ namespace WebApi
                 app.UseHsts();
             }
 
+            //cors
+            app.UseCors(_nameOfSpecificOrigins);
+
             app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseIdentityServer();
@@ -139,9 +142,6 @@ namespace WebApi
             });
 
             app.UseMvc();
-
-            //cors
-            app.UseCors(_nameOfSpecificOrigins);
         }
     }
 }
