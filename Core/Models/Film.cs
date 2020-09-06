@@ -19,6 +19,13 @@ namespace Core.Models
         public string Director { get; set; }
         public string UrlTrailer { get; set; }
 
+        [ForeignKey(nameof(CreatedBy))]
+        public string CreatedById { get; set; }
+        [ForeignKey(nameof(ModifiedBy))]
+        public string ModifiedById { get; set; }
+        [ForeignKey(nameof(Preview))]
+        public Guid PreviewId { get; set; }
+
         [Required]
         public DateTime? CreatedOn { get; set; }
         public Account CreatedBy { get; set; }

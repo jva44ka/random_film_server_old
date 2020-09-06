@@ -14,5 +14,6 @@ namespace Core.Models
         public DateTime? ModifiedOn { get; set; }
         [Required]
         public string Data { get; set; }
+        public string DataCompressed { get; set; }
     }
 }
