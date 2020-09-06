@@ -54,17 +54,6 @@ namespace WebApi.Controllers
             return result;
         }
 
-        // POST: api/Likes
-        [HttpPost]
-        [Authorize]
-        public async Task<LikeViewModel> PostLike(LikeViewModel likeViewModel)
-        {
-            var newlike = _mapper.Map<LikeViewModel, UserFilm>(likeViewModel);
-            var createdLike = await _likeManager.CreateAsync(newlike);
-            var result = _mapper.Map<UserFilm, LikeViewModel>(createdLike);
-            return result;
-        }
-
         // PUT: api/Films/5
         [HttpPut("{id}")]
         public async Task<ActionResult<bool>> LikeOrDislike(Guid id, [FromBody] LikeOrDislikeRequest request)

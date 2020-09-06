@@ -8,6 +8,9 @@ using System;
 using Services.Managers.Interfaces;
 using AutoMapper;
 using Core.Models;
+using Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace WebApi.Controllers
 {
@@ -17,11 +20,13 @@ namespace WebApi.Controllers
     {
         private readonly IFilmManager _filmManager;
         private readonly IMapper _mapper;
+        private readonly IRepository<Account> _accountsRepo;
 
-        public FilmsController(IFilmManager filmManager, IMapper mapper)
+        public FilmsController(IFilmManager filmManager, IMapper mapper, IRepository<Account> accountsRepo)
         {
             _filmManager = filmManager;
             _mapper = mapper;
+            _accountsRepo = accountsRepo;
         }
 
         // GET: api/Films
@@ -36,17 +41,21 @@ namespace WebApi.Controllers
 
         // GET: api/Films/5
         [HttpGet("{id}")]
-        public ActionResult<FilmViewModel> GetFilm(Guid id)
+        public async Task<ActionResult<FilmViewModel>> GetFilm(Guid id)
         {
             var film = this._filmManager.GetFilmById(id);
+            var user = _accountsRepo.Get()
+                .AsNoTracking()
+                .Single(x => x.UserName == User.Identity.Name);
 
             if (film == null)
             {
                 return NotFound();
             }
 
-            var result = _mapper.Map<Film, FilmViewModel>(film);
-            return result;
+            var filmVM = _mapper.Map<Film, FilmViewModel>(film);
+            await MapFilm(filmVM, user.Id);
+            return filmVM;
         }
 
         // GET: api/Films/Random
