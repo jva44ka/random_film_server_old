@@ -41,7 +41,23 @@ namespace WebApi.Controllers
 
         // GET: api/Films/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<FilmViewModel>> GetFilm(Guid id)
+        public async Task<ActionResult<FilmViewModel>> GetFilmById(Guid id)
+        {
+            var film = this._filmManager.GetFilmById(id);
+
+            if (film == null)
+            {
+                return NotFound();
+            }
+
+            var filmVM = _mapper.Map<Film, FilmViewModel>(film);
+            return filmVM;
+        }
+
+        // GET: api/Films/5
+        [HttpGet("{id}/forUser")]
+        [Authorize]
+        public async Task<ActionResult<FilmViewModel>> GetFilmByIdForUser(Guid id)
         {
             var film = this._filmManager.GetFilmById(id);
             var user = _accountsRepo.Get()
