@@ -26,11 +26,12 @@ namespace WebApi.Controllers
 
         // GET: api/Films
         [HttpGet]
-        public async Task<IList<FilmViewModel>> GetFilms()
+        public async Task<IList<FilmViewModel>> GetFilms(string forUserId = "")
         {
             var films = this._filmManager.GetAllFilms();
-            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
-            return result;
+            var filmsVm = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+            await MapFilms(filmsVm, forUserId);
+            return filmsVm;
         }
 
         // GET: api/Films/5
@@ -102,6 +103,21 @@ namespace WebApi.Controllers
                 return Ok();
             else
                 return BadRequest();
+        }
+
+        private async Task<FilmViewModel> MapFilm(FilmViewModel film, string userId)
+        {
+            film.IsLiked = await _filmManager.IsLiked(userId, film.Id);
+            return film;
+        }
+
+        private async Task<IList<FilmViewModel>> MapFilms(IList<FilmViewModel> films, string userId)
+        {
+            foreach (var film in films)
+            {
+                film.IsLiked = await _filmManager.IsLiked(userId, film.Id);
+            }
+            return films;
         }
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.ViewModels;
+using WebApi.ViewModels.RequestModels;
 
 namespace WebApi.Controllers
 {
@@ -62,6 +63,17 @@ namespace WebApi.Controllers
             var createdLike = await _likeManager.CreateAsync(newlike);
             var result = _mapper.Map<UserFilm, LikeViewModel>(createdLike);
             return result;
+        }
+
+        // PUT: api/Films/5
+        [HttpPut("{id}")]
+        public async Task<ActionResult<bool>> LikeOrDislike(Guid id, [FromBody] LikeOrDislikeRequest request)
+        {
+            if (id != request.FilmId)
+                return BadRequest();
+
+            var film = await _likeManager.LikeOrDislike(request.FilmId, request.UserId, request.LikeOrDislike);
+            return Ok(film);
         }
 
         // DELETE: api/Likes/ByFilm/5

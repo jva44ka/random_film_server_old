@@ -10,6 +10,12 @@ namespace Core.Models
     {
         [Key, Required]
         public Guid Id { get; set; }
+
+        [Required, ForeignKey(nameof(Film))]
+        public Guid FilmId { get; set; }
+        [Required, ForeignKey(nameof(Genre))]
+        public  Guid GenreId { get; set; }
+
         [Required]
         public virtual Film Film { get; set; }
         [Required]

@@ -13,7 +13,11 @@ namespace Core.Models
 		[Required]
 		public string Name { get; set; }
 		public string Type { get; set; }
+		[Required]
 		public string Value { get; set; }
-		public Account User { get; set; }
+		[ForeignKey(nameof(User)), Required]
+		public string UserId { get; set; }
+		[Required]
+		public virtual Account User { get; set; }
 	}
 }
