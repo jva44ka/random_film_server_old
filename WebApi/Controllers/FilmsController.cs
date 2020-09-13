@@ -41,7 +41,7 @@ namespace WebApi.Controllers
 
         // GET: api/Films/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<FilmViewModel>> GetFilmById(Guid id)
+        public async Task<ActionResult<FilmViewModel>> GetFilmById(Guid id, string forUserId = "")
         {
             var film = this._filmManager.GetFilmById(id);
 
@@ -51,26 +51,17 @@ namespace WebApi.Controllers
             }
 
             var filmVM = _mapper.Map<Film, FilmViewModel>(film);
-            return filmVM;
-        }
 
-        // GET: api/Films/5
-        [HttpGet("{id}/forUser")]
-        [Authorize]
-        public async Task<ActionResult<FilmViewModel>> GetFilmByIdForUser(Guid id)
-        {
-            var film = this._filmManager.GetFilmById(id);
-            var user = _accountsRepo.Get()
-                .AsNoTracking()
-                .Single(x => x.UserName == User.Identity.Name);
-
-            if (film == null)
+            if (!string.IsNullOrEmpty(forUserId))
             {
-                return NotFound();
+                var user = _accountsRepo.Get()
+                    .AsNoTracking()
+                    .Single(x => x.Id == forUserId);
+
+                if(user != null)
+                    await MapFilm(filmVM, forUserId);
             }
 
-            var filmVM = _mapper.Map<Film, FilmViewModel>(film);
-            await MapFilm(filmVM, user.Id);
             return filmVM;
         }
 
