@@ -67,11 +67,15 @@ namespace WebApi.Controllers
 
         // GET: api/Films/Random
         [HttpGet("Random")]
-        public async Task<IList<FilmViewModel>> GetRandomFilms()
+        public async Task<IList<FilmViewModel>> GetRandomFilms([FromQuery]string forUserId = "")
         {
             var films = await this._filmManager.GetRandomShakedFilms();
-            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
-            return result;
+            var filmsVM = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+
+            if (!string.IsNullOrEmpty(forUserId))
+                await MapFilms(filmsVM, forUserId);
+
+            return filmsVM;
         }
 
         [HttpGet("Specificity")]

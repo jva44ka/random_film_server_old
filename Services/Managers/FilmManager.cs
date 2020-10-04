@@ -55,6 +55,7 @@ namespace Services.Managers
                                 .Include(x => x.Likes)
                                 .Include(x => x.FilmsGenres)
                                     .ThenInclude(x => x.Genre)
+                                .Include(x => x.Preview)
                                 .Where(x => x.FilmsGenres.FirstOrDefault(y => y.Film.Id == x.Id) != null)
                                 .ToListAsync();
             Film[] result = new Film[filmsCache.Count];
