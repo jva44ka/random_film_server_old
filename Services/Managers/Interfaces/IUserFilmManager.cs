@@ -10,7 +10,7 @@ namespace Services.Managers.Interfaces
         IList<UserFilm> GetLikes();
         UserFilm GetLikeById(Guid id);
         UserFilm GetLikeByFilm(string userName, Guid filmId);
-        Task<UserFilm> CreateAsync(UserFilm like);
+        Task<bool?> LikeOrDislike(Guid filmId, string userId, bool? likeOrDislike);
         Task<bool> DeleteByFilmAsync(string userName, Guid filmId);
         Task<bool> DeleteAsync(Guid id);
     }

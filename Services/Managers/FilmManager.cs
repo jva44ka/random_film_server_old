@@ -14,14 +14,17 @@ namespace Services.Managers
     {
         private IRepository<Film> _filmsRepo;
         private IRepository<Account> _usersRepo;
+        private IRepository<UserFilm> _userFilmsRepo;
         private IFilmSelector _specifityFilmSelector;
 
         public FilmManager(IRepository<Film> films,
                             IRepository<Account> users, 
+                            IRepository<UserFilm> userFilms,
                             IFilmSelector specifityFilmSelector)
         {
             this._filmsRepo = films;
             this._usersRepo = users;
+            this._userFilmsRepo = userFilms;
             this._specifityFilmSelector = specifityFilmSelector;
         }
 
@@ -52,6 +55,7 @@ namespace Services.Managers
                                 .Include(x => x.Likes)
                                 .Include(x => x.FilmsGenres)
                                     .ThenInclude(x => x.Genre)
+                                .Include(x => x.Preview)
                                 .Where(x => x.FilmsGenres.FirstOrDefault(y => y.Film.Id == x.Id) != null)
                                 .ToListAsync();
             Film[] result = new Film[filmsCache.Count];
@@ -86,6 +90,15 @@ namespace Services.Managers
         {
             var user = this._usersRepo.Get().FirstOrDefault(x => x.UserName == userName);
             return await this._specifityFilmSelector.GetFilmsAsync(user);
+        }
+
+        public Task<bool?> IsLiked(string userId, Guid filmId)
+        {
+            var filmReact = this._userFilmsRepo
+                .Get()
+                .FirstOrDefault(x => x.UserId == userId && x.FilmId == filmId);
+
+            return Task.FromResult(filmReact?.IsLike);
         }
 
         public async Task<Film> CreateAsync(Film film)

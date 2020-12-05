@@ -8,6 +8,9 @@ using System;
 using Services.Managers.Interfaces;
 using AutoMapper;
 using Core.Models;
+using Core.Interfaces;
+using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace WebApi.Controllers
 {
@@ -17,25 +20,28 @@ namespace WebApi.Controllers
     {
         private readonly IFilmManager _filmManager;
         private readonly IMapper _mapper;
+        private readonly IRepository<Account> _accountsRepo;
 
-        public FilmsController(IFilmManager filmManager, IMapper mapper)
+        public FilmsController(IFilmManager filmManager, IMapper mapper, IRepository<Account> accountsRepo)
         {
             _filmManager = filmManager;
             _mapper = mapper;
+            _accountsRepo = accountsRepo;
         }
 
         // GET: api/Films
         [HttpGet]
-        public async Task<IList<FilmViewModel>> GetFilms()
+        public async Task<IList<FilmViewModel>> GetFilms(string forUserId = "")
         {
             var films = this._filmManager.GetAllFilms();
-            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
-            return result;
+            var filmsVm = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+            await MapFilms(filmsVm, forUserId);
+            return filmsVm;
         }
 
         // GET: api/Films/5
         [HttpGet("{id}")]
-        public ActionResult<FilmViewModel> GetFilm(Guid id)
+        public async Task<ActionResult<FilmViewModel>> GetFilmById(Guid id, string forUserId = "")
         {
             var film = this._filmManager.GetFilmById(id);
 
@@ -44,17 +50,32 @@ namespace WebApi.Controllers
                 return NotFound();
             }
 
-            var result = _mapper.Map<Film, FilmViewModel>(film);
-            return result;
+            var filmVM = _mapper.Map<Film, FilmViewModel>(film);
+
+            if (!string.IsNullOrEmpty(forUserId))
+            {
+                var user = _accountsRepo.Get()
+                    .AsNoTracking()
+                    .Single(x => x.Id == forUserId);
+
+                if(user != null)
+                    await MapFilm(filmVM, forUserId);
+            }
+
+            return filmVM;
         }
 
         // GET: api/Films/Random
         [HttpGet("Random")]
-        public async Task<IList<FilmViewModel>> GetRandomFilms()
+        public async Task<IList<FilmViewModel>> GetRandomFilms([FromQuery]string forUserId = "")
         {
             var films = await this._filmManager.GetRandomShakedFilms();
-            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
-            return result;
+            var filmsVM = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+
+            if (!string.IsNullOrEmpty(forUserId))
+                await MapFilms(filmsVM, forUserId);
+
+            return filmsVM;
         }
 
         [HttpGet("Specificity")]
@@ -102,6 +123,21 @@ namespace WebApi.Controllers
                 return Ok();
             else
                 return BadRequest();
+        }
+
+        private async Task<FilmViewModel> MapFilm(FilmViewModel film, string userId)
+        {
+            film.IsLiked = await _filmManager.IsLiked(userId, film.Id);
+            return film;
+        }
+
+        private async Task<IList<FilmViewModel>> MapFilms(IList<FilmViewModel> films, string userId)
+        {
+            foreach (var film in films)
+            {
+                film.IsLiked = await _filmManager.IsLiked(userId, film.Id);
+            }
+            return films;
         }
     }
 }
