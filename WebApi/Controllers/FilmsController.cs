@@ -11,6 +11,7 @@ using Core.Models;
 using Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using Infrastructure.Auth;
 
 namespace WebApi.Controllers
 {
@@ -82,7 +83,8 @@ namespace WebApi.Controllers
         [Authorize]
         public async Task<IList<FilmViewModel>> GetSpecificityFilms()
         {
-            var films = await this._filmManager.GetSpicifityFilms(HttpContext.User.Identity.Name);
+            var userId = HttpContext.User.Claims.Single(c => c.Type == AuthExtensions.UserId).Value;
+            var films = await _filmManager.GetSpicifityFilms(userId);
             var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
             return result;
         }

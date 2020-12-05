@@ -11,7 +11,7 @@ namespace Services.Managers.Interfaces
         Film GetFilmById(Guid id);
         Task<IList<Film>> GetRandomShakedFilms();
         IList<Genre> GetGenres(Guid id);
-        Task<IList<Film>> GetSpicifityFilms(string userName);
+        Task<IList<Film>> GetSpicifityFilms(string userId);
         Task<bool?> IsLiked(string userId, Guid filmId);
         Task<Film> CreateAsync(Film film);
         Task<Film> UpdateAsync(Guid id, Film film);

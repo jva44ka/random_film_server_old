@@ -27,7 +27,7 @@ namespace Services.Managers
         }
         public IList<UserFilm> GetLikes() 
         {
-            return (IList<UserFilm>)_userFilmsRepo.Get().ToList();
+            return _userFilmsRepo.Get().ToList();
         }
 
         public UserFilm GetLikeById(Guid id) 

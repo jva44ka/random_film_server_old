@@ -86,9 +86,9 @@ namespace Services.Managers
                                 .ToList();
         }
 
-        public async Task<IList<Film>> GetSpicifityFilms(string userName)
+        public async Task<IList<Film>> GetSpicifityFilms(string userId)
         {
-            var user = this._usersRepo.Get().FirstOrDefault(x => x.UserName == userName);
+            var user = this._usersRepo.Get().First(x => x.Id == userId);
             return await this._specifityFilmSelector.GetFilmsAsync(user);
         }
 
