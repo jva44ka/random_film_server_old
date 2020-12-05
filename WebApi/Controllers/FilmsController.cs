@@ -85,7 +85,8 @@ namespace WebApi.Controllers
         {
             var userId = HttpContext.User.Claims.Single(c => c.Type == AuthExtensions.UserId).Value;
             var films = await _filmManager.GetSpicifityFilms(userId);
-            var result = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+            var filmsVM = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+            var result = await MapFilms(filmsVM, userId);
             return result;
         }
 

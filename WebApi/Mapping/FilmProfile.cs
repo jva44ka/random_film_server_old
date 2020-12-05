@@ -33,7 +33,7 @@ namespace WebApi.Mapping
                 .AfterMap((film, filmVM) => 
                 {
                     filmVM.GenresText = "";
-                    var genres = film.FilmsGenres.Select(x => x.Genre).OrderBy(x => x.Name).ToList();
+                    var genres = film.FilmsGenres?.Select(x => x.Genre)?.OrderBy(x => x.Name)?.ToList();
                     if (genres?.Count > 0)
                     {
                         filmVM.GenresText += genres[0].Name;

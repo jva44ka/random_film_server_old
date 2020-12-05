@@ -51,6 +51,9 @@ namespace Services.Algorithms
                                         .ToArrayAsync();
             _filmsCache = await _filmsRepo.Get()
                                     .Include(x => x.Likes)
+                                    .Include(x => x.FilmsGenres)
+                                        .ThenInclude(x => x.Genre)
+                                    .Include(x => x.Preview)
                                     .ToArrayAsync();
             _likesCache = await _likesRepo.Get().Include(x => x.Film)
                                                     .Include(x => x.User)
