@@ -111,15 +111,14 @@ namespace Services.Managers
 
         private ClaimsIdentity GetIdentity(Account user)
         {
-            var roleClaim = user.IsMainAdmin ? "global_admin" : "";
             var claims = new List<Claim>
             {
-                new Claim(ClaimsIdentity.DefaultNameClaimType, user.UserName)
+                new Claim(type: AuthExtensions.UserId, value: user.Id)
             };
-            if (!string.IsNullOrEmpty(roleClaim))
-            {
-                claims.Add(new Claim(ClaimsIdentity.DefaultNameClaimType, roleClaim));
-            }
+
+            /*if (user.IsMainAdmin)
+                claims.Add(new Claim(ClaimsIdentity.DefaultNameClaimType, "global_admin"));*/
+
             ClaimsIdentity claimsIdentity =
                 new ClaimsIdentity(claims, "Token", ClaimsIdentity.DefaultNameClaimType,
                     ClaimsIdentity.DefaultRoleClaimType);
