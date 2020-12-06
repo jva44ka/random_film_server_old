@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Services.Algorithms.Interfaces
+﻿namespace Services.Algorithms.Interfaces
 {
-    public interface IRandomFilmsAlgorithm
-    {
-    }
+    public interface IRandomFilmsAlgorithm : IFilmSelector
+    { }
 }

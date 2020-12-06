@@ -41,7 +41,7 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<List<Film>> GetFilmsAsync(Account user)
+        public async Task<IEnumerable<Film>> GetFilms(string userId)
         {
             List<Film> result;
 
@@ -58,6 +58,8 @@ namespace Services.Algorithms
             _likesCache = await _likesRepo.Get().Include(x => x.Film)
                                                     .Include(x => x.User)
                                                     .ToArrayAsync();
+
+            var user = _accountsCache.First(u => u.Id == userId);
 
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
             Dictionary<Account, int> usersMatches = GetUsersWithSameLakes(user);

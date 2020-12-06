@@ -46,7 +46,7 @@ namespace Infrastructure.Data
 
             modelBuilder.Entity<SelectionList>().HasMany(x => x.FilmSelectionLists);
             modelBuilder.Entity<FilmSelectionList>().HasOne(x => x.SelectionList);
-            modelBuilder.Entity<FilmSelectionList>().HasOne(x => x.User);
+            modelBuilder.Entity<FilmSelectionList>().HasOne(x => x.Film);
 
             base.OnModelCreating(modelBuilder);
         }

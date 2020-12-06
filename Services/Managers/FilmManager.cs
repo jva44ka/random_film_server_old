@@ -88,8 +88,7 @@ namespace Services.Managers
 
         public async Task<IList<Film>> GetSpicifityFilms(string userId)
         {
-            var user = this._usersRepo.Get().First(x => x.Id == userId);
-            return await _specifityFilmSelector.GetFilmsAsync(user);
+            return (await _specifityFilmSelector.GetFilms(userId)).ToList();
         }
 
         public Task<bool?> IsLiked(string userId, Guid filmId)

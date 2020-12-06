@@ -14,6 +14,7 @@ namespace Core.Models
         [ForeignKey(nameof(User))]
         public string UserId { get; set; }
         public AlgorithmType AlgorithmType { get; set; }
+        public DateTime CreatedOn { get; set; }
 
         public virtual Account User { get; set; }
         public virtual ICollection<FilmSelectionList> FilmSelectionLists { get; set; }
