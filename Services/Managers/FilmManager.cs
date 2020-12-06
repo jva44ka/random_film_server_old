@@ -15,12 +15,12 @@ namespace Services.Managers
         private IRepository<Film> _filmsRepo;
         private IRepository<Account> _usersRepo;
         private IRepository<UserFilm> _userFilmsRepo;
-        private IFilmSelector _specifityFilmSelector;
+        private ISameUsersAlgorithm _specifityFilmSelector;
 
         public FilmManager(IRepository<Film> films,
                             IRepository<Account> users, 
                             IRepository<UserFilm> userFilms,
-                            IFilmSelector specifityFilmSelector)
+                            ISameUsersAlgorithm specifityFilmSelector)
         {
             this._filmsRepo = films;
             this._usersRepo = users;
@@ -89,7 +89,7 @@ namespace Services.Managers
         public async Task<IList<Film>> GetSpicifityFilms(string userId)
         {
             var user = this._usersRepo.Get().First(x => x.Id == userId);
-            return await this._specifityFilmSelector.GetFilmsAsync(user);
+            return await _specifityFilmSelector.GetFilmsAsync(user);
         }
 
         public Task<bool?> IsLiked(string userId, Guid filmId)

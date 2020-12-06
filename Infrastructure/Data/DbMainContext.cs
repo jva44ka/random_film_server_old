@@ -44,6 +44,10 @@ namespace Infrastructure.Data
 
             modelBuilder.Entity<Image>();
 
+            modelBuilder.Entity<SelectionList>().HasMany(x => x.FilmSelectionLists);
+            modelBuilder.Entity<FilmSelectionList>().HasOne(x => x.SelectionList);
+            modelBuilder.Entity<FilmSelectionList>().HasOne(x => x.User);
+
             base.OnModelCreating(modelBuilder);
         }
 

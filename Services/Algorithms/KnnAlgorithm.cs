@@ -15,7 +15,7 @@ namespace Services.Algorithms
     /// также средние значения у всех пользователей пользователей, находит ближайших соседей по этим значениям и смотрит
     /// какие у этих соседей общие лайкнутые фильмы.
     /// </summary>
-    public class KnnAlgorithm : IFilmSelector
+    public class KnnAlgorithm : IKnnAlgorithm
     {
         // Количество ближайших соседей
         private const int k = 3;

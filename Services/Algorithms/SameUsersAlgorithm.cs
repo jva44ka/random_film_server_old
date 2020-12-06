@@ -14,7 +14,7 @@ namespace Services.Algorithms
     /// какое-то число соседей (k) и смотрит какие у этих соседей общие лайкнутые фильмы, которые не лайкнул исходный пользователь.
     /// Если не находит берет рандомный из лайкнутых соседями но не лайкнутый пользователем.
     /// </summary>
-    public class SameUsersAlgorithm : IFilmSelector
+    public class SameUsersAlgorithm : ISameUsersAlgorithm
     {
         // Количество ближайших соседей
         private const int k = 1;
