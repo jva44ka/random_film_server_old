@@ -50,7 +50,7 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user">Пользователь, под которого подбирается фильм</param>
         /// <returns>Фильм</returns>
-        public async Task<IEnumerable<Film>> GetFilms(string userId = null)
+        public async Task<IList<Film>> GetFilms(string userId = null)
         {
             List<Film> result;
 

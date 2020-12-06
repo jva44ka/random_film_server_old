@@ -16,16 +16,19 @@ namespace Services.Managers
         private IRepository<Account> _usersRepo;
         private IRepository<UserFilm> _userFilmsRepo;
         private ISameUsersAlgorithm _specifityFilmSelector;
+        private readonly IRandomFilmsAlgorithm _randomFilmsAlgorithm;
 
         public FilmManager(IRepository<Film> films,
                             IRepository<Account> users, 
                             IRepository<UserFilm> userFilms,
-                            ISameUsersAlgorithm specifityFilmSelector)
+                            ISameUsersAlgorithm specifityFilmSelector,
+                            IRandomFilmsAlgorithm randomFilmsAlgorithm)
         {
-            this._filmsRepo = films;
-            this._usersRepo = users;
-            this._userFilmsRepo = userFilms;
-            this._specifityFilmSelector = specifityFilmSelector;
+            _filmsRepo = films;
+            _usersRepo = users;
+            _userFilmsRepo = userFilms;
+            _specifityFilmSelector = specifityFilmSelector;
+            _randomFilmsAlgorithm = randomFilmsAlgorithm;
         }
 
         public IList<Film> GetAllFilms()
@@ -48,32 +51,9 @@ namespace Services.Managers
                 .FirstOrDefault(x => x.Id == id);
         }
 
-        public async Task<IList<Film>> GetRandomShakedFilms()
+        public async Task<IList<Film>> GetRandomShakedFilms(string userId = null)
         {
-            //Вытаскиваем бд в кеш
-            List<Film> filmsCache = await this._filmsRepo.Get()
-                                .Include(x => x.Likes)
-                                .Include(x => x.FilmsGenres)
-                                    .ThenInclude(x => x.Genre)
-                                .Include(x => x.Preview)
-                                .Where(x => x.FilmsGenres.FirstOrDefault(y => y.Film.Id == x.Id) != null)
-                                .ToListAsync();
-            Film[] result = new Film[filmsCache.Count];
-
-            //Буферные переменные для работы с рандомной выборкой и переброса из коллекции в коллекцию
-            int filmsCacheCount = filmsCache.Count;
-            Random random = new Random();
-            Film selectedFilm;
-
-            //Заполнение массива рандомными фильмами
-            for (int i = 0; i < filmsCacheCount; i++)
-            {
-                selectedFilm = filmsCache[random.Next(0, filmsCache.Count)];
-                result[i] = selectedFilm;
-                filmsCache.Remove(selectedFilm);
-            }
-
-            return result.ToList();
+            return await _randomFilmsAlgorithm.GetFilms(userId);
         }
 
         public IList<Genre> GetGenres(Guid id)

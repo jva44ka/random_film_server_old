@@ -22,28 +22,37 @@ namespace Services.Algorithms
             _filmsRepo = filmsRepo;
             _selectionListRepo = selectionListRepo;
         }
-        public Task<IEnumerable<Film>> GetFilms(string userId = null)
+        public async Task<IList<Film>> GetFilms(string userId = null)
         {
             //Проверяем существует ли подборка и актуальна ли она (например не больше чем месячной давности)
             var list = _selectionListRepo
                 .Get()
                 .Include(sl => sl.FilmSelectionLists)
                     .ThenInclude(fsl => fsl.Film)
+                        .ThenInclude(f => f.Preview)
                 .FirstOrDefault(fl => fl.UserId == userId
-                    && DateTime.UtcNow.Month != fl.CreatedOn.Month 
                     && fl.AlgorithmType == AlgorithmType.RandomAlgorithm);
 
-            if (list != null)
-                return Task.FromResult(list.FilmSelectionLists.Select(fsl => fsl.Film).AsEnumerable());
+            //Подборка существует и она нынешнего месяца
+            if (list != null && DateTime.UtcNow.Month == list.CreatedOn.Month)
+            {
+                return list.FilmSelectionLists.Select(fsl => fsl.Film).ToList();
+            }
+            //Подборка существует но она просрочена
+            else if (list != null)
+            {
+                _selectionListRepo.Delete(list.Id);
+                await _selectionListRepo.SaveAsync();
+            }
 
             //Вытаскиваем бд в кеш
             List<Film> filmsCache = _filmsRepo.Get()
-                                .Include(x => x.Likes)
-                                .Include(x => x.FilmsGenres)
-                                    .ThenInclude(x => x.Genre)
-                                .Include(x => x.Preview)
-                                .Where(x => x.FilmsGenres.FirstOrDefault(y => y.Film.Id == x.Id) != null)
-                                .ToList();
+                .Include(x => x.Likes)
+                .Include(x => x.FilmsGenres)
+                    .ThenInclude(x => x.Genre)
+                .Include(x => x.Preview)
+                .Where(x => x.FilmsGenres.FirstOrDefault(y => y.Film.Id == x.Id) != null)
+                .ToList();
             Film[] result = new Film[filmsCache.Count];
 
             //Буферные переменные для работы с рандомной выборкой и переброса из коллекции в коллекцию
@@ -59,7 +68,29 @@ namespace Services.Algorithms
                 filmsCache.Remove(selectedFilm);
             }
 
-            return Task.FromResult(result.AsEnumerable());
+            if (!string.IsNullOrEmpty(userId))
+                await CreateList(userId, result);
+
+            return result.ToList();
+        }
+
+        private async Task CreateList(string userId, Film[] films)
+        {
+            var filmSelectionLists = films.Select((film, index) => new FilmSelectionList
+            {
+                FilmId = film.Id,
+                Order = index
+            }).ToList();
+
+            var selectionList = new SelectionList
+            {
+                UserId = userId,
+                AlgorithmType = AlgorithmType.RandomAlgorithm,
+                CreatedOn = DateTime.UtcNow,
+                FilmSelectionLists = filmSelectionLists
+            };
+            await _selectionListRepo.CreateAsync(selectionList);
+            await _selectionListRepo.SaveAsync();
         }
     }
 }

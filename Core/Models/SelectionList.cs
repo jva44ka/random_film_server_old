@@ -1,4 +1,5 @@
 ﻿using Core.Enums;
+using Core.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,7 +8,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Core.Models
 {
     [Table("SelectionList")]
-    public class SelectionList
+    public class SelectionList : IDataModel
     {
         [Key, Required]
         public Guid Id { get; set; }

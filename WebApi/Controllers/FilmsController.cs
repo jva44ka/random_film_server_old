@@ -70,7 +70,8 @@ namespace WebApi.Controllers
         [HttpGet("Random")]
         public async Task<IList<FilmViewModel>> GetRandomFilms([FromQuery]string forUserId = "")
         {
-            var films = await this._filmManager.GetRandomShakedFilms();
+            var userId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == AuthExtensions.UserId)?.Value;
+            var films = await this._filmManager.GetRandomShakedFilms(userId);
             var filmsVM = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
 
             if (!string.IsNullOrEmpty(forUserId))

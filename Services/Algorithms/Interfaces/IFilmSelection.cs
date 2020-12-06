@@ -6,6 +6,6 @@ namespace Services.Algorithms.Interfaces
 {
     public interface IFilmSelector
     {
-        Task<IEnumerable<Film>> GetFilms(string userId = null);
+        Task<IList<Film>> GetFilms(string userId = null);
     }
 }

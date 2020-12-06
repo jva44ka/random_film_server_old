@@ -1,11 +1,12 @@
-﻿using System;
+﻿using Core.Interfaces;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Core.Models
 {
     [Table("FilmSelectionList")]
-    public class FilmSelectionList
+    public class FilmSelectionList : IDataModel
     {
         [Key, Required]
         public Guid Id { get; set; }

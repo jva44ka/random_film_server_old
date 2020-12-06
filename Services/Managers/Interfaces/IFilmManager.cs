@@ -9,7 +9,7 @@ namespace Services.Managers.Interfaces
     {
         IList<Film> GetAllFilms();
         Film GetFilmById(Guid id);
-        Task<IList<Film>> GetRandomShakedFilms();
+        Task<IList<Film>> GetRandomShakedFilms(string userId = null);
         IList<Genre> GetGenres(Guid id);
         Task<IList<Film>> GetSpicifityFilms(string userId);
         Task<bool?> IsLiked(string userId, Guid filmId);

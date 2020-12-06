@@ -41,7 +41,7 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<IEnumerable<Film>> GetFilms(string userId)
+        public async Task<IList<Film>> GetFilms(string userId)
         {
             List<Film> result;
 
