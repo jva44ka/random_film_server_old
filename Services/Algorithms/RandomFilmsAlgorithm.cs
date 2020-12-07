@@ -1,12 +1,10 @@
-﻿using Core.Enums;
-using Core.Interfaces;
+﻿using Core.Interfaces;
 using Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Services.Algorithms.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Services.Algorithms
@@ -22,29 +20,8 @@ namespace Services.Algorithms
             _filmsRepo = filmsRepo;
             _selectionListRepo = selectionListRepo;
         }
-        public async Task<IList<Film>> GetFilms(string userId = null)
+        public Task<IList<Film>> GetFilms(string userId = null)
         {
-            //Проверяем существует ли подборка и актуальна ли она (например не больше чем месячной давности)
-            var list = _selectionListRepo
-                .Get()
-                .Include(sl => sl.FilmSelectionLists)
-                    .ThenInclude(fsl => fsl.Film)
-                        .ThenInclude(f => f.Preview)
-                .FirstOrDefault(fl => fl.UserId == userId
-                    && fl.AlgorithmType == AlgorithmType.RandomAlgorithm);
-
-            //Подборка существует и она нынешнего месяца
-            if (list != null && DateTime.UtcNow.Month == list.CreatedOn.Month)
-            {
-                return list.FilmSelectionLists.Select(fsl => fsl.Film).ToList();
-            }
-            //Подборка существует но она просрочена
-            else if (list != null)
-            {
-                _selectionListRepo.Delete(list.Id);
-                await _selectionListRepo.SaveAsync();
-            }
-
             //Вытаскиваем бд в кеш
             List<Film> filmsCache = _filmsRepo.Get()
                 .Include(x => x.Likes)
@@ -68,29 +45,7 @@ namespace Services.Algorithms
                 filmsCache.Remove(selectedFilm);
             }
 
-            if (!string.IsNullOrEmpty(userId))
-                await CreateList(userId, result);
-
-            return result.ToList();
-        }
-
-        private async Task CreateList(string userId, Film[] films)
-        {
-            var filmSelectionLists = films.Select((film, index) => new FilmSelectionList
-            {
-                FilmId = film.Id,
-                Order = index
-            }).ToList();
-
-            var selectionList = new SelectionList
-            {
-                UserId = userId,
-                AlgorithmType = AlgorithmType.RandomAlgorithm,
-                CreatedOn = DateTime.UtcNow,
-                FilmSelectionLists = filmSelectionLists
-            };
-            await _selectionListRepo.CreateAsync(selectionList);
-            await _selectionListRepo.SaveAsync();
+            return Task.FromResult((IList<Film>)result);
         }
     }
 }
