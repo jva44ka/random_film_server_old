@@ -12,14 +12,14 @@ namespace Services.Algorithms
     public class RandomFilmsAlgorithm : IRandomFilmsAlgorithm
     {
         private readonly IRepository<Film> _filmsRepo;
-        private readonly IRepository<SelectionList> _selectionListRepo;
+        private readonly IRepository<UserFilm> _userFilmRepo;
 
-        public RandomFilmsAlgorithm(IRepository<Film> filmsRepo, 
-            IRepository<SelectionList> selectionListRepo)
+        public RandomFilmsAlgorithm(IRepository<Film> filmsRepo, IRepository<UserFilm> userFilmRepo)
         {
             _filmsRepo = filmsRepo;
-            _selectionListRepo = selectionListRepo;
+            _userFilmRepo = userFilmRepo;
         }
+
         public Task<IList<Film>> GetFilms(string userId = null)
         {
             //Вытаскиваем бд в кеш
@@ -30,7 +30,7 @@ namespace Services.Algorithms
                 .Include(x => x.Preview)
                 .Where(x => x.FilmsGenres.FirstOrDefault(y => y.Film.Id == x.Id) != null)
                 .ToList();
-            Film[] result = new Film[filmsCache.Count];
+            Film[] resultArr = new Film[filmsCache.Count];
 
             //Буферные переменные для работы с рандомной выборкой и переброса из коллекции в коллекцию
             int filmsCacheCount = filmsCache.Count;
@@ -41,8 +41,22 @@ namespace Services.Algorithms
             for (int i = 0; i < filmsCacheCount; i++)
             {
                 selectedFilm = filmsCache[random.Next(0, filmsCache.Count)];
-                result[i] = selectedFilm;
+                resultArr[i] = selectedFilm;
                 filmsCache.Remove(selectedFilm);
+            }
+
+            var result = resultArr.ToList();
+
+            //Если userId != null, значит удалить из результирующей коллекции просмотренные фильмы
+            if (!string.IsNullOrEmpty(userId))
+            {
+                var watchedFilmIds = _userFilmRepo.Get()
+                    .Where(uf => uf.UserId == userId && uf.IsLike != null)
+                    .Select(uf => uf.FilmId)
+                    .ToList();
+
+                result = result.Where(f => !watchedFilmIds.Contains(f.Id))
+                    .ToList();
             }
 
             return Task.FromResult((IList<Film>)result);
