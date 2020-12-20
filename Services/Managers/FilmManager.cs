@@ -80,7 +80,7 @@ namespace Services.Managers
             // Не существует никакой
             var films = await _randomFilmsAlgorithm.GetFilms(userId);
             if (!string.IsNullOrEmpty(userId))
-                await CreateList(userId, films);
+                await CreateList(userId, films, AlgorithmType.RandomAlgorithm);
             return films;
         }
 
@@ -119,7 +119,7 @@ namespace Services.Managers
             // Не существует никакой
             var films = await _specifityFilmSelector.GetFilms(userId);
             if (!string.IsNullOrEmpty(userId))
-                await CreateList(userId, films);
+                await CreateList(userId, films, AlgorithmType.SameUsersAlgorithm);
             return films;
         }
 
@@ -168,7 +168,7 @@ namespace Services.Managers
             return result;
         }
 
-        private async Task CreateList(string userId, IList<Film> films)
+        private async Task CreateList(string userId, IList<Film> films, AlgorithmType algorithmType)
         {
             var filmSelectionLists = films.Select((film, index) => new FilmSelectionList
             {
@@ -179,7 +179,7 @@ namespace Services.Managers
             var selectionList = new SelectionList
             {
                 UserId = userId,
-                AlgorithmType = AlgorithmType.RandomAlgorithm,
+                AlgorithmType = algorithmType,
                 CreatedOn = DateTime.UtcNow,
                 FilmSelectionLists = filmSelectionLists
             };
