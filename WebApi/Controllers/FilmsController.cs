@@ -12,6 +12,7 @@ using Core.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
 using Infrastructure.Auth;
+using WebApi.ViewModels.ResultModels;
 
 namespace WebApi.Controllers
 {
@@ -85,10 +86,37 @@ namespace WebApi.Controllers
         public async Task<IList<FilmViewModel>> GetSpecificityFilms()
         {
             var userId = HttpContext.User.Claims.Single(c => c.Type == AuthExtensions.UserId).Value;
-            var films = await _filmManager.GetSpicifityFilms(userId);
+            var films = await _filmManager.GetSameUsersFilms(userId);
             var filmsVM = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
             var result = await MapFilms(filmsVM, userId);
             return result;
+        }
+
+        // GET: api/films/selections
+        [HttpGet("selections")]
+        public async Task<GetSelectionsResult> GetSelections()
+        {
+            var userId = HttpContext.User.Claims.FirstOrDefault(x => x.Type == AuthExtensions.UserId)?.Value;
+            var resultModel = new GetSelectionsResult();
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                resultModel.RandomFilms = _mapper.Map<IList<Film>, IList<FilmViewModel>>
+                    (await _filmManager.GetRandomShakedFilms());
+            }
+            else
+            {
+                // Потом можно вынести в сервис и распараллелить
+                resultModel.RandomFilms = _mapper.Map<IList<Film>, IList<FilmViewModel>>
+                    (await _filmManager.GetRandomShakedFilms(userId));
+                resultModel.SameUserFilms = _mapper.Map<IList<Film>, IList<FilmViewModel>>
+                    (await _filmManager.GetSameUsersFilms(userId));
+
+                await MapFilms(resultModel.RandomFilms, userId);
+                await MapFilms(resultModel.SameUserFilms, userId);
+            }
+
+            return resultModel;
         }
 
         // POST: api/Films

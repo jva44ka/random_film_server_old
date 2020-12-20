@@ -58,7 +58,7 @@ namespace Services.Managers
         public async Task<IList<Film>> GetRandomShakedFilms(string userId = null)
         {
             //Проверяем существует ли подборка и актуальна ли она (например не больше чем месячной давности)
-            var list = _selectionListRepo
+            var selection = _selectionListRepo
                 .Get()
                 .Include(sl => sl.FilmSelectionLists)
                     .ThenInclude(fsl => fsl.Film)
@@ -67,13 +67,13 @@ namespace Services.Managers
                     && fl.AlgorithmType == AlgorithmType.RandomAlgorithm);
 
             //Подборка существует и она нынешнего месяца
-            if (list != null && DateTime.UtcNow.Month == list.CreatedOn.Month)
-                return list.FilmSelectionLists.Select(fsl => fsl.Film).ToList();
+            if (selection != null && DateTime.UtcNow.Month == selection.CreatedOn.Month)
+                return selection.FilmSelectionLists.Select(fsl => fsl.Film).ToList();
 
             //Подборка существует но она просрочена
-            else if (list != null)
+            else if (selection != null)
             {
-                _selectionListRepo.Delete(list.Id);
+                _selectionListRepo.Delete(selection.Id);
                 await _selectionListRepo.SaveAsync();
             }
 
@@ -87,16 +87,40 @@ namespace Services.Managers
         public IList<Genre> GetGenres(Guid id)
         {
             return _filmsRepo.Get()
-                                .Include(x => x.FilmsGenres)
-                                    .ThenInclude(x => x.Genre)
-                                .SelectMany(x => x.FilmsGenres)
-                                .Select(x => x.Genre)
-                                .ToList();
+                .Include(x => x.FilmsGenres)
+                    .ThenInclude(x => x.Genre)
+                .SelectMany(x => x.FilmsGenres)
+                .Select(x => x.Genre)
+                .ToList();
         }
 
-        public async Task<IList<Film>> GetSpicifityFilms(string userId)
+        public async Task<IList<Film>> GetSameUsersFilms(string userId)
         {
-            return (await _specifityFilmSelector.GetFilms(userId)).ToList();
+            //Проверяем существует ли подборка и актуальна ли она (например не больше чем месячной давности)
+            var selection = _selectionListRepo
+                .Get()
+                .Include(sl => sl.FilmSelectionLists)
+                    .ThenInclude(fsl => fsl.Film)
+                        .ThenInclude(f => f.Preview)
+                .FirstOrDefault(fl => fl.UserId == userId
+                    && fl.AlgorithmType == AlgorithmType.SameUsersAlgorithm);
+
+            //Подборка существует и она нынешнего месяца
+            if (selection != null && DateTime.UtcNow.Month == selection.CreatedOn.Month)
+                return selection.FilmSelectionLists.Select(fsl => fsl.Film).ToList();
+
+            //Подборка существует но она просрочена
+            else if (selection != null)
+            {
+                _selectionListRepo.Delete(selection.Id);
+                await _selectionListRepo.SaveAsync();
+            }
+
+            // Не существует никакой
+            var films = await _specifityFilmSelector.GetFilms(userId);
+            if (!string.IsNullOrEmpty(userId))
+                await CreateList(userId, films);
+            return films;
         }
 
         public Task<bool?> IsLiked(string userId, Guid filmId)

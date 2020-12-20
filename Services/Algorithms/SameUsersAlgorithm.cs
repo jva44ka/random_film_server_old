@@ -31,9 +31,9 @@ namespace Services.Algorithms
                                     IRepository<Film> films,
                                     IRepository<UserFilm> likes)
         {
-            this._accountsRepo = accounts;
-            this._filmsRepo = films;
-            this._likesRepo = likes;
+            _accountsRepo = accounts;
+            _filmsRepo = films;
+            _likesRepo = likes;
         }
 
         /// <summary>
