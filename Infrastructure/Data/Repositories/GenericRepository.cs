@@ -102,5 +102,11 @@ namespace Infrastructure.Data.Repositories
         {
             _context.Entry(entity).State = EntityState.Detached;
         }
+
+        private async Task ValidateConnect()
+        {
+            if (!(await _context.Database.CanConnectAsync()))
+                await _context.Database.OpenConnectionAsync();
+        }
     }
 }
