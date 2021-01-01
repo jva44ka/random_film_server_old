@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.Interfaces;
+using Infrastructure.Exceptions;
+using System;
 
 namespace Services.Algorithms
 {
@@ -43,6 +45,9 @@ namespace Services.Algorithms
         /// <returns></returns>
         public async Task<IList<Film>> GetFilms(string userId)
         {
+            if (string.IsNullOrEmpty(userId))
+                throw new ArgumentException("Incorrect userId: " + userId);
+
             List<Film> result;
 
             // 0. Вытаскивыние базы в кеш

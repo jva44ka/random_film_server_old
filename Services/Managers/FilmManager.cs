@@ -19,13 +19,15 @@ namespace Services.Managers
         private readonly IRepository<SelectionList> _selectionListRepo;
         private ISameUsersAlgorithm _specifityFilmSelector;
         private readonly IRandomFilmsAlgorithm _randomFilmsAlgorithm;
+        private readonly IPopularFilmsAlgorithm _popularFilmsAlgorithm;
 
         public FilmManager(IRepository<Film> films,
                             IRepository<Account> users, 
                             IRepository<UserFilm> userFilms,
                             IRepository<SelectionList> selectionListRepo,
                             ISameUsersAlgorithm specifityFilmSelector,
-                            IRandomFilmsAlgorithm randomFilmsAlgorithm)
+                            IRandomFilmsAlgorithm randomFilmsAlgorithm, 
+                            IPopularFilmsAlgorithm popularFilmsAlgorithm)
         {
             _filmsRepo = films;
             _usersRepo = users;
@@ -33,6 +35,7 @@ namespace Services.Managers
             _selectionListRepo = selectionListRepo;
             _specifityFilmSelector = specifityFilmSelector;
             _randomFilmsAlgorithm = randomFilmsAlgorithm;
+            _popularFilmsAlgorithm = popularFilmsAlgorithm;
         }
 
         public IList<Film> GetAllFilms()
@@ -120,6 +123,35 @@ namespace Services.Managers
             var films = await _specifityFilmSelector.GetFilms(userId);
             if (!string.IsNullOrEmpty(userId))
                 await CreateList(userId, films, AlgorithmType.SameUsersAlgorithm);
+            return films;
+        }
+
+        public async Task<IList<Film>> GetPopularFilms(string userId = null)
+        {
+            //Проверяем существует ли подборка и актуальна ли она (например не больше чем месячной давности)
+            var selection = _selectionListRepo
+                .Get()
+                .Include(sl => sl.FilmSelectionLists)
+                    .ThenInclude(fsl => fsl.Film)
+                        .ThenInclude(f => f.Preview)
+                .FirstOrDefault(fl => fl.UserId == userId
+                    && fl.AlgorithmType == AlgorithmType.PopularFilmsAlgorithm);
+
+            //Подборка существует и она нынешнего месяца
+            if (selection != null && DateTime.UtcNow.Month == selection.CreatedOn.Month)
+                return selection.FilmSelectionLists.Select(fsl => fsl.Film).ToList();
+
+            //Подборка существует но она просрочена
+            else if (selection != null)
+            {
+                _selectionListRepo.Delete(selection.Id);
+                await _selectionListRepo.SaveAsync();
+            }
+
+            // Не существует никакой
+            var films = await _popularFilmsAlgorithm.GetFilms(userId);
+            if (!string.IsNullOrEmpty(userId))
+                await CreateList(userId, films, AlgorithmType.PopularFilmsAlgorithm);
             return films;
         }
 

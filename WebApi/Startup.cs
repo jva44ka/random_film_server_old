@@ -71,6 +71,7 @@ namespace WebApi
             services.AddScoped<ISameUsersAlgorithm, SameUsersAlgorithm>();
             services.AddScoped<IRandomFilmsAlgorithm, RandomFilmsAlgorithm>();
             services.AddScoped<IKnnAlgorithm, KnnAlgorithm>();
+            services.AddScoped<IPopularFilmsAlgorithm, PopularFilmsAlgorithm>();
 
             // auth
             services.AddIdentity<Account, IdentityRole>(options =>

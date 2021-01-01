@@ -103,6 +103,8 @@ namespace WebApi.Controllers
             {
                 resultModel.RandomFilms = _mapper.Map<IList<Film>, IList<FilmViewModel>>
                     (await _filmManager.GetRandomShakedFilms());
+                resultModel.PopularFilms = _mapper.Map<IList<Film>, IList<FilmViewModel>>
+                    (await _filmManager.GetPopularFilms());
             }
             else
             {
@@ -111,6 +113,8 @@ namespace WebApi.Controllers
                     (await _filmManager.GetRandomShakedFilms(userId));
                 resultModel.SameUserFilms = _mapper.Map<IList<Film>, IList<FilmViewModel>>
                     (await _filmManager.GetSameUsersFilms(userId));
+                resultModel.PopularFilms = _mapper.Map<IList<Film>, IList<FilmViewModel>>
+                    (await _filmManager.GetPopularFilms(userId));
 
                 await MapFilms(resultModel.RandomFilms, userId);
                 await MapFilms(resultModel.SameUserFilms, userId);
