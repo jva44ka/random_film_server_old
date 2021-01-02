@@ -118,6 +118,7 @@ namespace WebApi.Controllers
 
                 await MapFilms(resultModel.RandomFilms, userId);
                 await MapFilms(resultModel.SameUserFilms, userId);
+                await MapFilms(resultModel.PopularFilms, userId);
             }
 
             return resultModel;
