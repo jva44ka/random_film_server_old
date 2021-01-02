@@ -7,6 +7,7 @@ namespace Infrastructure.Auth
 {
     public static class AuthExtensions
     {
+        public const string UserId = "UserId";
         public static string GenerateJwtToken(this ClaimsIdentity claims)
         {
             var now = DateTime.UtcNow;

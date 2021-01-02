@@ -4,14 +4,16 @@ using Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 namespace Infrastructure.Migrations
 {
     [DbContext(typeof(DbMainContext))]
-    partial class DbMainContextModelSnapshot : ModelSnapshot
+    [Migration("20201206184022_AddedCreatedOnToSelectedFilmLists")]
+    partial class AddedCreatedOnToSelectedFilmLists
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -245,20 +247,20 @@ namespace Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("FilmId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<int>("Order")
                         .HasColumnType("int");
 
                     b.Property<Guid>("SelectionListId")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("FilmId");
-
                     b.HasIndex("SelectionListId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("FilmSelectionList");
                 });
@@ -670,17 +672,15 @@ namespace Infrastructure.Migrations
 
             modelBuilder.Entity("Core.Models.FilmSelectionList", b =>
                 {
-                    b.HasOne("Core.Models.Film", "Film")
-                        .WithMany()
-                        .HasForeignKey("FilmId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Core.Models.SelectionList", "SelectionList")
                         .WithMany("FilmSelectionLists")
                         .HasForeignKey("SelectionListId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("Core.Models.Account", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("Core.Models.SelectionList", b =>
