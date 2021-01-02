@@ -9,12 +9,15 @@ namespace Services.Managers.Interfaces
     {
         IList<Film> GetAllFilms();
         Film GetFilmById(Guid id);
-        Task<IList<Film>> GetRandomShakedFilms();
         IList<Genre> GetGenres(Guid id);
-        Task<IList<Film>> GetSpicifityFilms(string userId);
         Task<bool?> IsLiked(string userId, Guid filmId);
         Task<Film> CreateAsync(Film film);
         Task<Film> UpdateAsync(Guid id, Film film);
         Task<bool> DeleteAsync(Guid id);
+
+        // Подбор фильмов 
+        Task<IList<Film>> GetRandomShakedFilms(string userId = null);
+        Task<IList<Film>> GetSameUsersFilms(string userId);
+        Task<IList<Film>> GetPopularFilms(string userId = null);
     }
 }

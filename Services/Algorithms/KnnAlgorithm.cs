@@ -15,7 +15,7 @@ namespace Services.Algorithms
     /// также средние значения у всех пользователей пользователей, находит ближайших соседей по этим значениям и смотрит
     /// какие у этих соседей общие лайкнутые фильмы.
     /// </summary>
-    public class KnnAlgorithm : IFilmSelector
+    public class KnnAlgorithm : IKnnAlgorithm
     {
         // Количество ближайших соседей
         private const int k = 3;
@@ -50,7 +50,7 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user">Пользователь, под которого подбирается фильм</param>
         /// <returns>Фильм</returns>
-        public async Task<List<Film>> GetFilmsAsync(Account user)
+        public async Task<IList<Film>> GetFilms(string userId = null)
         {
             List<Film> result;
 
@@ -70,13 +70,15 @@ namespace Services.Algorithms
                                     .Include(x => x.User)
                                     .ToArrayAsync();
 
+            var user = accountsCache.First(u => u.Id == userId);
+
             /* 1. Нахождение для каждого пользователя (кроме того, для которого подбираем фильм) 
                  среднего значения в каждой метрике (жанр 1, жанр 2, ..., жанр n)*/
 
             Dictionary<Account, double[]> vectors = new Dictionary<Account, double[]>();
             for (int i = 0; i < accountsCache.Length; i++)
             {
-                if (user.Id == accountsCache[i].Id)
+                if (userId == accountsCache[i].Id)
                     continue;
                 vectors.Add(accountsCache[i], GetAveregeLikes(accountsCache[i]));
             }

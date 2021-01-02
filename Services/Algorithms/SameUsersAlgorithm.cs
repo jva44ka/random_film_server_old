@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.Interfaces;
+using Infrastructure.Exceptions;
+using System;
 
 namespace Services.Algorithms
 {
@@ -14,7 +16,7 @@ namespace Services.Algorithms
     /// какое-то число соседей (k) и смотрит какие у этих соседей общие лайкнутые фильмы, которые не лайкнул исходный пользователь.
     /// Если не находит берет рандомный из лайкнутых соседями но не лайкнутый пользователем.
     /// </summary>
-    public class SameUsersAlgorithm : IFilmSelector
+    public class SameUsersAlgorithm : ISameUsersAlgorithm
     {
         // Количество ближайших соседей
         private const int k = 1;
@@ -31,9 +33,9 @@ namespace Services.Algorithms
                                     IRepository<Film> films,
                                     IRepository<UserFilm> likes)
         {
-            this._accountsRepo = accounts;
-            this._filmsRepo = films;
-            this._likesRepo = likes;
+            _accountsRepo = accounts;
+            _filmsRepo = films;
+            _likesRepo = likes;
         }
 
         /// <summary>
@@ -41,8 +43,11 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<List<Film>> GetFilmsAsync(Account user)
+        public async Task<IList<Film>> GetFilms(string userId)
         {
+            if (string.IsNullOrEmpty(userId))
+                throw new ArgumentException("Incorrect userId: " + userId);
+
             List<Film> result;
 
             // 0. Вытаскивыние базы в кеш
@@ -58,6 +63,8 @@ namespace Services.Algorithms
             _likesCache = await _likesRepo.Get().Include(x => x.Film)
                                                     .Include(x => x.User)
                                                     .ToArrayAsync();
+
+            var user = _accountsCache.First(u => u.Id == userId);
 
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
             Dictionary<Account, int> usersMatches = GetUsersWithSameLakes(user);
