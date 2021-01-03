@@ -73,14 +73,8 @@ namespace Services.Managers
                 react.ViewedOn = DateTime.UtcNow;
                 _userFilmsRepo.Create(react);
             }
-            try
-            {
-                await _userFilmsRepo.SaveAsync();
-            }
-            catch(Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
+            
+            await _userFilmsRepo.SaveAsync();
             return react.IsLike;
         }
 
