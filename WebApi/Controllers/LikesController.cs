@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.ViewModels;
 using WebApi.ViewModels.RequestModels;
+using System.Linq;
+using Infrastructure.Auth;
 
 namespace WebApi.Controllers
 {
@@ -16,20 +18,22 @@ namespace WebApi.Controllers
     [ApiController]
     public class LikesController : ControllerBase
     {
-        private readonly IUserFilmManager _likeManager;
+        private readonly IUserFilmManager _userFilmManager;
+        private readonly ISelectionManager _selectionManager;
         private readonly IMapper _mapper;
 
-        public LikesController(IUserFilmManager likeManager, IMapper mapper)
+        public LikesController(IUserFilmManager userFilmManager, ISelectionManager selectionManager, IMapper mapper)
         {
-            this._likeManager = likeManager;
-            this._mapper = mapper;
+            _userFilmManager = userFilmManager;
+            _selectionManager = selectionManager;
+            _mapper = mapper;
         }
 
         // GET: api/Likes
         [HttpGet]
         public IList<LikeViewModel> GetLikes()
         {
-            var likes = _likeManager.GetLikes();
+            var likes = _userFilmManager.GetLikes();
             var result = _mapper.Map<IList<UserFilm>, IList<LikeViewModel>>(likes);
             return result;
         }
@@ -39,7 +43,7 @@ namespace WebApi.Controllers
         [Authorize]
         public async Task<ActionResult<LikeViewModel>> GetLike(Guid id)
         {
-            var like = _likeManager.GetLikeById(id);
+            var like = _userFilmManager.GetLikeById(id);
             var result = _mapper.Map<UserFilm, LikeViewModel>(like);
             return result;
         }
@@ -49,7 +53,7 @@ namespace WebApi.Controllers
         [Authorize]
         public LikeViewModel GetLikeByFilm(Guid filmId)
         {
-            var like = _likeManager.GetLikeByFilm(HttpContext.User.Identity.Name, filmId);
+            var like = _userFilmManager.GetLikeByFilm(HttpContext.User.Identity.Name, filmId);
             var result = _mapper.Map<UserFilm, LikeViewModel>(like);
             return result;
         }
@@ -61,7 +65,8 @@ namespace WebApi.Controllers
             if (id != request.FilmId)
                 return BadRequest();
 
-            var film = await _likeManager.LikeOrDislike(request.FilmId, request.UserId, request.LikeOrDislike);
+            await _selectionManager.RemoveAllSelectionsByUser(request.UserId);
+            var film = await _userFilmManager.LikeOrDislike(request.FilmId, request.UserId, request.LikeOrDislike);
             return Ok(film);
         }
 
@@ -70,8 +75,10 @@ namespace WebApi.Controllers
         [Authorize]
         public async Task<ActionResult> DeleteLikeByFilm(Guid filmId)
         {
-            var deletingResult = await _likeManager.DeleteByFilmAsync(HttpContext.User.Identity.Name, filmId);
-            if (deletingResult)
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == AuthExtensions.UserId).Value;
+            await _selectionManager.RemoveAllSelectionsByUser(userId);
+            var deletingResult = await _userFilmManager.DeleteByFilmAsync(HttpContext.User.Identity.Name, filmId);
+            if (deletingResult.IsSuccess)
                 return Ok();
             else
                 return BadRequest();
@@ -82,8 +89,9 @@ namespace WebApi.Controllers
         [Authorize]
         public async Task<ActionResult> DeleteLike(Guid id)
         {
-            var deletingResult = await _likeManager.DeleteAsync(id);
-            if (deletingResult)
+            var deletingResult = await _userFilmManager.DeleteAsync(id);
+            await _selectionManager.RemoveAllSelectionsByUser(deletingResult.Data.UserId);
+            if (deletingResult.IsSuccess)
                 return Ok();
             else
                 return BadRequest();

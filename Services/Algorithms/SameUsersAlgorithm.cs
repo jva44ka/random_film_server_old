@@ -51,18 +51,18 @@ namespace Services.Algorithms
             List<Film> result;
 
             // 0. Вытаскивыние базы в кеш
-            _accountsCache = await _accountsRepo.Get()
+            _accountsCache = _accountsRepo.Get()
                                         .Include(x => x.UserFilms)
-                                        .ToArrayAsync();
-            _filmsCache = await _filmsRepo.Get()
+                                        .ToArray();
+            _filmsCache = _filmsRepo.Get()
                                     .Include(x => x.Likes)
                                     .Include(x => x.FilmsGenres)
                                         .ThenInclude(x => x.Genre)
                                     .Include(x => x.Preview)
-                                    .ToArrayAsync();
-            _likesCache = await _likesRepo.Get().Include(x => x.Film)
+                                    .ToArray();
+            _likesCache = _likesRepo.Get().Include(x => x.Film)
                                                     .Include(x => x.User)
-                                                    .ToArrayAsync();
+                                                    .ToArray();
 
             var user = _accountsCache.First(u => u.Id == userId);
 
@@ -110,7 +110,7 @@ namespace Services.Algorithms
                     continue;
                 for (int k = 0; k < filmsLikedByUser.Count; k++)
                 {
-                    sameLike = _likesCache.FirstOrDefault(x => (x.User.Id == _accountsCache[i].Id) && (x.Film.Id == filmsLikedByUser[k].Id));
+                    sameLike = _likesCache.FirstOrDefault(x => (x.User.Id == _accountsCache[i].Id) && (x.Film.Id == filmsLikedByUser[k].Id) && x.IsLike != null);
                     if ((sameLike != null) && (sameLike.IsLike == userLikes[k].IsLike))
                         matches++;
                 }
@@ -143,7 +143,7 @@ namespace Services.Algorithms
                 for (int k = 0; k < nearestToUser.Keys.Count; k++)
                 {
                     UserFilm like = _likesCache.FirstOrDefault(x => (x.Film.Id == notLikedFilmsByUser[i].Id) &&
-                                    (x.User.Id == nearestToUser.Keys.ElementAt(k).Id));
+                                    (x.User.Id == nearestToUser.Keys.ElementAt(k).Id) && x.IsLike != null);
                     if (like != null && like.IsLike != null)
                     {
                         if ((bool)like.IsLike)
@@ -180,7 +180,7 @@ namespace Services.Algorithms
         /// <returns>Коллекция оцененных фильмов</returns>
         private Film[] GetLikedFilmsByUser(Account user)
         {
-            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id).ToArray();
+            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id && x.IsLike != null).ToArray();
             List<Film> filmsLikedByUser = new List<Film>();
             foreach (var item in likesByUser)
                 filmsLikedByUser.Add(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));
@@ -195,7 +195,7 @@ namespace Services.Algorithms
         /// <returns>Коллекция оцененных фильмов</returns>
         private Film[] GetNotLikedFilmsByUser (Account user)
         {
-            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id).ToArray();
+            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id && x.IsLike != null).ToArray();
             List<Film> filmsNotLikedByUser = new List<Film>(_filmsCache);
             foreach (var item in likesByUser)
                 filmsNotLikedByUser.Remove(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));
