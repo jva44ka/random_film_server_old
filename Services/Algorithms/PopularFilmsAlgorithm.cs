@@ -25,7 +25,7 @@ namespace Services.Algorithms
             var user = await _accountRepository.Get().AsNoTracking().FirstOrDefaultAsync(u => u.Id == userId);
 
             if (user != null)
-                films = films.Where(f => f.Likes.FirstOrDefault(l => l.UserId == userId) == null);
+                films = films.Where(f => f.Likes.FirstOrDefault(l => l.UserId == userId && l.IsLike != null) == null);
 
             return await films.ToListAsync();
         }
