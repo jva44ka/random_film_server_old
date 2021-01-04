@@ -19,7 +19,7 @@ namespace Services.Algorithms
     public class SameUsersAlgorithm : ISameUsersAlgorithm
     {
         // Количество ближайших соседей
-        private const int k = 1;
+        private static readonly int k = 1;
 
         private Account[] _accountsCache;
         private Film[] _filmsCache;
@@ -93,12 +93,19 @@ namespace Services.Algorithms
         private Dictionary<Account, int> GetUsersWithSameLakes(Account user)
         {
             // Ищем лайкнутые фильмы пользователя
-            UserFilm[] userLikes = _likesCache.Where(x => x.User.Id == user.Id).ToArray();
-            List<Film> filmsLikedByUser = new List<Film>();
-            for (int i = 0; i < userLikes.Length; i++)
-            {
-                filmsLikedByUser.Add(_filmsCache.FirstOrDefault(x => x.Id == userLikes[i].Film.Id));
-            }
+            UserFilm[] userLikes = _likesRepo
+                .Get()
+                //.Include(ul => ul.Film)
+                .AsNoTracking()
+                .Where(x => x.UserId == user.Id)
+                .ToArray();
+
+            List<Guid> userLikesFilmIds = userLikes.Select(ul => ul.FilmId).ToList();
+
+            List<Film> filmsLikedByUser = _filmsRepo
+                .Get()
+                .Where(f => userLikesFilmIds.Contains(f.Id))
+                .ToList();
 
             // Ищем совпадения лайков с другими пользователями
             Dictionary<Account, int> result = new Dictionary<Account, int>();
@@ -165,7 +172,7 @@ namespace Services.Algorithms
                                     .Keys
                                     .ToList();
             }
-            catch(System.InvalidOperationException ex)
+            catch(InvalidOperationException ex)
             {
                 result = null;
             }
