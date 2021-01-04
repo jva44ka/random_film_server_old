@@ -13,12 +13,12 @@ namespace Services.Algorithms
     /// <summary>
     /// Алгоритм выдачи фильма с учетом предпочтений пользователя
     /// Кратко: алгоритм ищет пользователей с такими же лайкнутыми фильмами. Затем сортирует по количеству совпадений и берет 
-    /// какое-то число соседей (k) и смотрит какие у этих соседей общие лайкнутые фильмы, которые не лайкнул исходный пользователь.
+    /// какое-то число похожих по вкусу юзеров (k) и смотрит какие у них общие лайкнутые фильмы, которые не лайкнул исходный пользователь.
     /// Если не находит берет рандомный из лайкнутых соседями но не лайкнутый пользователем.
     /// </summary>
     public class SameUsersAlgorithm : ISameUsersAlgorithm
     {
-        // Количество ближайших соседей
+        // Количество похожих по вкусу юзеров
         private static readonly int k = 1;
 
         private Account[] _accountsCache;
@@ -111,17 +111,24 @@ namespace Services.Algorithms
             Dictionary<Account, int> result = new Dictionary<Account, int>();
             int matches = 0;
             UserFilm sameLike;
-            for (int i = 0; i < _accountsCache.Length; i++)
+
+            var accountsToAnalysis = _accountsRepo
+                .Get()
+                .Include(a => a.UserFilms)
+                .AsNoTracking()
+                .Where(a => a.Id != user.Id && a.UserFilms.Where(uf => uf.IsLike != null).Any())
+                .ToList();
+
+            foreach (Account iterUser in accountsToAnalysis)
             {
-                if (_accountsCache[i].Id == user.Id)
-                    continue;
-                for (int k = 0; k < filmsLikedByUser.Count; k++)
+                foreach (Film iterFilm in filmsLikedByUser)
                 {
-                    sameLike = _likesCache.FirstOrDefault(x => (x.User.Id == _accountsCache[i].Id) && (x.Film.Id == filmsLikedByUser[k].Id) && x.IsLike != null);
-                    if ((sameLike != null) && (sameLike.IsLike == userLikes[k].IsLike))
+                    //Переделать на WHERE.CONTAINS
+                    sameLike = _likesRepo.Get().FirstOrDefault(l => l.UserId == iterUser.Id && l.FilmId == iterFilm.Id && l.IsLike != null);
+                    if ((sameLike != null) && (sameLike.IsLike == userLikes.FirstOrDefault(ul => ul.FilmId == sameLike.FilmId).IsLike))
                         matches++;
                 }
-                result.Add(_accountsCache[i], matches);
+                result.Add(iterUser, matches);
                 matches = 0;
             }
             return result;
