@@ -20,7 +20,7 @@ namespace Services.Algorithms
             _userFilmRepo = userFilmRepo;
         }
 
-        public Task<IList<Film>> GetFilms(string userId = null)
+        public Task<IList<Guid>> GetFilmIds(string userId = null)
         {
             //Вытаскиваем бд в кеш
             List<Film> filmsCache = _filmsRepo.Get()
@@ -45,7 +45,7 @@ namespace Services.Algorithms
                 filmsCache.Remove(selectedFilm);
             }
 
-            var result = resultArr.ToList();
+            var result = resultArr.Select(f => f.Id).ToList();
 
             //Если userId != null, значит удалить из результирующей коллекции просмотренные фильмы
             if (!string.IsNullOrEmpty(userId))
@@ -55,11 +55,11 @@ namespace Services.Algorithms
                     .Select(uf => uf.FilmId)
                     .ToList();
 
-                result = result.Where(f => !watchedFilmIds.Contains(f.Id))
+                result = result.Where(filmId => !watchedFilmIds.Contains(filmId))
                     .ToList();
             }
 
-            return Task.FromResult((IList<Film>)result);
+            return Task.FromResult((IList<Guid>)result);
         }
     }
 }

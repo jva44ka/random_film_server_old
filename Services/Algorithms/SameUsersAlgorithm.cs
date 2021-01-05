@@ -38,12 +38,12 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        public async Task<IList<Film>> GetFilms(string userId)
+        public Task<IList<Guid>> GetFilmIds(string userId)
         {
             if (string.IsNullOrEmpty(userId))
                 throw new ArgumentException("Incorrect userId: " + userId);
 
-            List<Film> result;
+            List<Guid> result;
 
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
             Dictionary<string, int> usersMatches = GetUsersWithSameLikes(userId);
@@ -54,9 +54,9 @@ namespace Services.Algorithms
                 .Take(SameUsersAlgorithm.k).ToDictionary(x => x.Key, x => x.Value);
 
             /* 3. Выборка фильма для пользователя */
-            result = SelectFilms(userId, nearestToUser);
-
-            return result;
+            result = SelectFilmIds(userId, nearestToUser);
+            
+            return Task.FromResult((IList<Guid>)result);
         }
 
         /// <summary>
@@ -122,7 +122,7 @@ namespace Services.Algorithms
         /// <param name="user">Пользователь, для которого подбирается фильм</param>
         /// <param name="nearestToUser">id ближайших по вкусу юзеров / рейтинг их близости к нашему</param>
         /// <returns>Подобраные фильмы</returns>
-        private List<Film> SelectFilms(string userId, Dictionary<string, int> nearestToUser)
+        private List<Guid> SelectFilmIds(string userId, Dictionary<string, int> nearestToUser)
         {
             // Выясняем какие фильмы еще не оценивал (соответственно не смотрел) пользователь (посмотрел)
             Film[] notLikedFilmsByUser = GetNotLikedFilmsByUser(userId);
@@ -155,6 +155,7 @@ namespace Services.Algorithms
             return filmsLikes.OrderByDescending(x => x.Value)
                                 .ToDictionary(x => x.Key, x => x.Value)
                                 .Keys
+                                .Select(f => f.Id)
                                 .ToList();
 
         }
@@ -169,7 +170,6 @@ namespace Services.Algorithms
             return _filmsRepo
                 .Get()
                 .Include(f => f.Likes)
-                .Include(f => f.Preview) // ДЛЯ РАСЧЕТОВ НЕ НУЖНО И ОЧЕНЬ ЖИРНОЕ
                 .AsNoTracking()
                 .Where(f => !f.Likes.Where(l => l.UserId == userId && l.IsLike != null).Any())
                 .ToArray();

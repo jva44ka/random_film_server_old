@@ -13,11 +13,11 @@ namespace Services.Managers
 {
     public class FilmManager : IFilmManager
     {
-        private IRepository<Film> _filmsRepo;
-        private IRepository<Account> _usersRepo;
-        private IRepository<UserFilm> _userFilmsRepo;
+        private readonly IRepository<Film> _filmsRepo;
+        private readonly IRepository<Account> _usersRepo;
+        private readonly IRepository<UserFilm> _userFilmsRepo;
         private readonly IRepository<SelectionList> _selectionListRepo;
-        private ISameUsersAlgorithm _specifityFilmSelector;
+        private readonly ISameUsersAlgorithm _specifityFilmSelector;
         private readonly IRandomFilmsAlgorithm _randomFilmsAlgorithm;
         private readonly IPopularFilmsAlgorithm _popularFilmsAlgorithm;
 
@@ -81,10 +81,11 @@ namespace Services.Managers
             }
 
             // Не существует никакой
-            var films = await _randomFilmsAlgorithm.GetFilms(userId);
+            var filmIds = await _randomFilmsAlgorithm.GetFilmIds(userId);
             if (!string.IsNullOrEmpty(userId))
-                await CreateList(userId, films, AlgorithmType.RandomAlgorithm);
-            return films;
+                await CreateList(userId, filmIds, AlgorithmType.RandomAlgorithm);
+
+            return GetFilmsWithIncludes(filmIds);
         }
 
         public IList<Genre> GetGenres(Guid id)
@@ -120,10 +121,11 @@ namespace Services.Managers
             }
 
             // Не существует никакой
-            var films = await _specifityFilmSelector.GetFilms(userId);
+            var filmIds = await _specifityFilmSelector.GetFilmIds(userId);
             if (!string.IsNullOrEmpty(userId))
-                await CreateList(userId, films, AlgorithmType.SameUsersAlgorithm);
-            return films;
+                await CreateList(userId, filmIds, AlgorithmType.SameUsersAlgorithm);
+
+            return GetFilmsWithIncludes(filmIds);
         }
 
         public async Task<IList<Film>> GetPopularFilms(string userId = null)
@@ -149,10 +151,11 @@ namespace Services.Managers
             }
 
             // Не существует никакой
-            var films = await _popularFilmsAlgorithm.GetFilms(userId);
+            var filmIds = await _popularFilmsAlgorithm.GetFilmIds(userId);
             if (!string.IsNullOrEmpty(userId))
-                await CreateList(userId, films, AlgorithmType.PopularFilmsAlgorithm);
-            return films;
+                await CreateList(userId, filmIds, AlgorithmType.PopularFilmsAlgorithm);
+
+            return GetFilmsWithIncludes(filmIds);
         }
 
         public Task<bool?> IsLiked(string userId, Guid filmId)
@@ -200,11 +203,11 @@ namespace Services.Managers
             return result;
         }
 
-        private async Task CreateList(string userId, IList<Film> films, AlgorithmType algorithmType)
+        private async Task CreateList(string userId, IList<Guid> filmIds, AlgorithmType algorithmType)
         {
-            var filmSelectionLists = films.Select((film, index) => new FilmSelectionList
+            var filmSelectionLists = filmIds.Select((filmId, index) => new FilmSelectionList
             {
-                FilmId = film.Id,
+                FilmId = filmId,
                 Order = index
             }).ToList();
 
@@ -217,6 +220,18 @@ namespace Services.Managers
             };
             await _selectionListRepo.CreateAsync(selectionList);
             await _selectionListRepo.SaveAsync();
+        }
+
+        private IList<Film> GetFilmsWithIncludes(IList<Guid> filmIds)
+        {
+            return _filmsRepo.Get()
+                .Include(f => f.Likes)
+                .Include(f => f.Preview)
+                .Include(f => f.FilmsGenres)
+                    .ThenInclude(fg => fg.Genre)
+                .Where(f => filmIds.Contains(f.Id))
+                .AsNoTracking()
+                .ToList();
         }
     }
 }
