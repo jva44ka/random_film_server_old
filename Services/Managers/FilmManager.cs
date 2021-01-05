@@ -224,7 +224,7 @@ namespace Services.Managers
 
         private IList<Film> GetFilmsWithIncludes(IList<Guid> filmIds)
         {
-            return _filmsRepo.Get()
+            var films = _filmsRepo.Get()
                 .Include(f => f.Likes)
                 .Include(f => f.Preview)
                 .Include(f => f.FilmsGenres)
@@ -232,6 +232,9 @@ namespace Services.Managers
                 .Where(f => filmIds.Contains(f.Id))
                 .AsNoTracking()
                 .ToList();
+
+            var sortedFilms = filmIds.Select(fId => films.First(ff => fId == ff.Id)).ToList();
+            return sortedFilms;
         }
     }
 }
