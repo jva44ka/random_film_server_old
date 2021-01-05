@@ -110,6 +110,7 @@ namespace Services.Algorithms
             // Ищем совпадения лайков с другими пользователями
             Dictionary<Account, int> result = new Dictionary<Account, int>();
             int matches = 0;
+            List<UserFilm> iterUserLikes;
             UserFilm sameLike;
 
             var accountsToAnalysis = _accountsRepo
@@ -121,13 +122,18 @@ namespace Services.Algorithms
 
             foreach (Account iterUser in accountsToAnalysis)
             {
-                foreach (Film iterFilm in filmsLikedByUser)
+                iterUserLikes = _likesRepo.Get()
+                    .AsNoTracking()
+                    .Where(l => l.UserId == iterUser.Id && l.IsLike != null)
+                    .ToList();
+
+                foreach(UserFilm iterUserFilm in iterUserLikes)
                 {
-                    //Переделать на WHERE.CONTAINS
-                    sameLike = _likesRepo.Get().FirstOrDefault(l => l.UserId == iterUser.Id && l.FilmId == iterFilm.Id && l.IsLike != null);
-                    if ((sameLike != null) && (sameLike.IsLike == userLikes.FirstOrDefault(ul => ul.FilmId == sameLike.FilmId).IsLike))
+                    sameLike = iterUserLikes.FirstOrDefault(l => l.FilmId == iterUserFilm.FilmId && l.IsLike == iterUserFilm.IsLike);
+                    if (sameLike != null)
                         matches++;
                 }
+
                 result.Add(iterUser, matches);
                 matches = 0;
             }
