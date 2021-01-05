@@ -24,10 +24,6 @@ namespace Services.Algorithms
         {
             //Вытаскиваем бд в кеш
             List<Film> filmsCache = _filmsRepo.Get()
-                .Include(x => x.Likes)
-                .Include(x => x.FilmsGenres)
-                    .ThenInclude(x => x.Genre)
-                .Include(x => x.Preview)
                 .Where(x => x.FilmsGenres.FirstOrDefault(y => y.Film.Id == x.Id) != null)
                 .ToList();
             Film[] resultArr = new Film[filmsCache.Count];
