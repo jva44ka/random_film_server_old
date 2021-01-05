@@ -17,6 +17,7 @@ namespace Services.Managers
         private readonly IRepository<Account> _usersRepo;
         private readonly IRepository<UserFilm> _userFilmsRepo;
         private readonly IRepository<SelectionList> _selectionListRepo;
+        private readonly IRepository<Image> _imageRepo;
         private readonly ISameUsersAlgorithm _specifityFilmSelector;
         private readonly IRandomFilmsAlgorithm _randomFilmsAlgorithm;
         private readonly IPopularFilmsAlgorithm _popularFilmsAlgorithm;
@@ -25,6 +26,7 @@ namespace Services.Managers
                             IRepository<Account> users, 
                             IRepository<UserFilm> userFilms,
                             IRepository<SelectionList> selectionListRepo,
+                            IRepository<Image> imageRepo,
                             ISameUsersAlgorithm specifityFilmSelector,
                             IRandomFilmsAlgorithm randomFilmsAlgorithm, 
                             IPopularFilmsAlgorithm popularFilmsAlgorithm)
@@ -33,6 +35,7 @@ namespace Services.Managers
             _usersRepo = users;
             _userFilmsRepo = userFilms;
             _selectionListRepo = selectionListRepo;
+            _imageRepo = imageRepo;
             _specifityFilmSelector = specifityFilmSelector;
             _randomFilmsAlgorithm = randomFilmsAlgorithm;
             _popularFilmsAlgorithm = popularFilmsAlgorithm;
@@ -194,6 +197,35 @@ namespace Services.Managers
 
             await _filmsRepo.SaveAsync();
             return film;
+        }
+
+        public async Task<Image> UpdatePreview(Guid filmId, Image newPreview)
+        {
+            _imageRepo.Untrack(newPreview);
+
+            var film = _filmsRepo.Get().Include(f => f.Preview)
+                .AsTracking()
+                .First(f => f.Id == filmId);
+
+            var createdPreview = await _imageRepo.CreateAsync(newPreview);
+            createdPreview.DataCompressed = createdPreview.GetResizedData();
+            await _imageRepo.SaveAsync();
+
+            if (film.Preview == null)
+            {
+                film.PreviewId = createdPreview.Id;
+                await _filmsRepo.SaveAsync();
+            }
+            else
+            {
+                _imageRepo.Delete(film.PreviewId);
+                await _imageRepo.SaveAsync();
+
+                film.PreviewId = createdPreview.Id;
+                await _filmsRepo.SaveAsync();
+            }
+
+            return createdPreview;
         }
 
         public async Task<bool> DeleteAsync(Guid id)
