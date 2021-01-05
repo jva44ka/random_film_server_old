@@ -45,18 +45,16 @@ namespace Services.Algorithms
 
             List<Film> result;
 
-            var user = _accountsRepo.Get().AsNoTracking().First(u => u.Id == userId);
-
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
-            Dictionary<Account, int> usersMatches = GetUsersWithSameLikes(user);
+            Dictionary<string, int> usersMatches = GetUsersWithSameLikes(userId);
 
             /* 2. Сортировка по совпадениям лайков и выбор ближайших по вкусу юзеров */
-            Dictionary<Account, int> nearestToUser = usersMatches
+            Dictionary<string, int> nearestToUser = usersMatches
                 .OrderByDescending(x => x.Value).ToDictionary(x => x.Key, x => x.Value)
                 .Take(SameUsersAlgorithm.k).ToDictionary(x => x.Key, x => x.Value);
 
             /* 3. Выборка фильма для пользователя */
-            result = SelectFilms(user, nearestToUser);
+            result = SelectFilms(userId, nearestToUser);
 
             return result;
         }
@@ -64,15 +62,15 @@ namespace Services.Algorithms
         /// <summary>
         /// Находит рейтинги похожести (общие лайкнутые фильмы) для каждого пользователя относительно искомого пользователя
         /// </summary>
-        /// <param name="user">Пользователь, для которого подбирается фильм</param>
-        /// <returns>Словарь вида "пользователь"-"количество общих лайков с пользователем для которого подбирается фильм"</returns>
-        private Dictionary<Account, int> GetUsersWithSameLikes(Account user)
+        /// <param name="userId">Пользователь, для которого подбирается фильм</param>
+        /// <returns>Словарь вида "id пользователя"-"количество общих лайков с пользователем для которого подбирается фильм"</returns>
+        private Dictionary<string, int> GetUsersWithSameLikes(string userId)
         {
             // Ищем лайкнутые фильмы пользователя
             List<Guid> userLikesFilmIds = _likesRepo
                 .Get()
                 .AsNoTracking()
-                .Where(x => x.UserId == user.Id)
+                .Where(x => x.UserId == userId)
                 .Select(ul => ul.FilmId)
                 .ToList();
 
@@ -83,7 +81,7 @@ namespace Services.Algorithms
                 .ToList();
 
             // Подготовка буферов для поиска совпадений лайков с другими пользователями
-            Dictionary<Account, int> result = new Dictionary<Account, int>();
+            Dictionary<string, int> result = new Dictionary<string, int>();
             int matches = 0;
             List<UserFilm> iterUserLikes;
             UserFilm sameLike;
@@ -93,7 +91,7 @@ namespace Services.Algorithms
                 .Get()
                 .Include(a => a.UserFilms)
                 .AsNoTracking()
-                .Where(a => a.Id != user.Id && a.UserFilms.Where(uf => uf.IsLike != null).Any())
+                .Where(a => a.Id != userId && a.UserFilms.Where(uf => uf.IsLike != null).Any())
                 .ToList();
 
             // Непосредственно поиск совпадений лайков с другими пользователями
@@ -111,7 +109,7 @@ namespace Services.Algorithms
                         matches++;
                 }
 
-                result.Add(iterUser, matches);
+                result.Add(iterUser.Id, matches);
                 matches = 0;
             }
             return result;
@@ -122,12 +120,12 @@ namespace Services.Algorithms
         /// список фильмов и рейтингов этих фильмов. Рейтинг формируется количеством лайков/дизлайков от ближайших юзеров.
         /// </summary>
         /// <param name="user">Пользователь, для которого подбирается фильм</param>
-        /// <param name="nearestToUser">Ближайшие по вкусу юзеры / рейтинг их близости к нашему</param>
+        /// <param name="nearestToUser">id ближайших по вкусу юзеров / рейтинг их близости к нашему</param>
         /// <returns>Подобраные фильмы</returns>
-        private List<Film> SelectFilms(Account user, Dictionary<Account, int> nearestToUser)
+        private List<Film> SelectFilms(string userId, Dictionary<string, int> nearestToUser)
         {
             // Выясняем какие фильмы еще не оценивал (соответственно не смотрел) пользователь (посмотрел)
-            Film[] notLikedFilmsByUser = GetNotLikedFilmsByUser(user.Id);
+            Film[] notLikedFilmsByUser = GetNotLikedFilmsByUser(userId);
 
             // Вводим счетчик лайков у этих фильмов ближайшими юзерами к этому пользователю
             Dictionary<Film, int> filmsLikes = new Dictionary<Film, int>();
@@ -140,7 +138,7 @@ namespace Services.Algorithms
                 for (int k = 0; k < nearestToUser.Keys.Count; k++)
                 {
                     UserFilm like = notLikedFilmsByUser[i].Likes
-                        .FirstOrDefault(l => l.IsLike != null && l.UserId == nearestToUser.Keys.ElementAt(k).Id);
+                        .FirstOrDefault(l => l.IsLike != null && l.UserId == nearestToUser.Keys.ElementAt(k));
                     if (like != null && like.IsLike != null)
                     {
                         if ((bool)like.IsLike)
