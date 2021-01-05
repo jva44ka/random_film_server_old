@@ -50,7 +50,7 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user">Пользователь, под которого подбирается фильм</param>
         /// <returns>Фильм</returns>
-        public async Task<IList<Film>> GetFilms(string userId = null)
+        public async Task<IList<Guid>> GetFilmIds(string userId = null)
         {
             List<Film> result;
 
@@ -97,7 +97,7 @@ namespace Services.Algorithms
             /* 5. Выборка фильма для пользователя */
             result = GetResultFilms(user, nearestToUser);
 
-            return result;
+            return result.Select(f => f.Id).ToList();
         }
 
         /// <summary>

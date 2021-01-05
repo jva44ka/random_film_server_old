@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Diagnostics;
+using Services.Models;
 
 namespace Services.Managers
 {
@@ -73,18 +74,12 @@ namespace Services.Managers
                 react.ViewedOn = DateTime.UtcNow;
                 _userFilmsRepo.Create(react);
             }
-            try
-            {
-                await _userFilmsRepo.SaveAsync();
-            }
-            catch(Exception ex)
-            {
-                Debug.WriteLine(ex);
-            }
+            
+            await _userFilmsRepo.SaveAsync();
             return react.IsLike;
         }
 
-        public async Task<bool> DeleteByFilmAsync(string userName, Guid filmId) 
+        public async Task<RemoveResult<UserFilm>> DeleteByFilmAsync(string userName, Guid filmId) 
         {
             var owner = _accountRepo.Get().FirstOrDefault(x => x.UserName == userName);
             var like = _userFilmsRepo.Get()
@@ -95,16 +90,26 @@ namespace Services.Managers
             if (like == null)
                 throw new NotExistsException("Like not exists for delete");
 
-            return _userFilmsRepo.Delete(like.Id);
+            var result = new RemoveResult<UserFilm>
+            {
+                IsSuccess = _userFilmsRepo.Delete(like.Id),
+                Data = like
+            };
+            return result;
         }
 
-        public async Task<bool> DeleteAsync(Guid id) 
+        public async Task<RemoveResult<UserFilm>> DeleteAsync(Guid id) 
         {
             var like = await _userFilmsRepo.GetByIdAsync(id);
             if (like == null)
                 throw new NotExistsException("Like not exists for delete");
 
-            return _userFilmsRepo.Delete(like.Id);
+            var result = new RemoveResult<UserFilm> 
+            { 
+                IsSuccess = _userFilmsRepo.Delete(like.Id),
+                Data = like
+            };
+            return result;
         }
     }
 }

@@ -67,6 +67,7 @@ namespace WebApi
             services.AddScoped<IAccountManager<Account>, AccountManager>();
             services.AddScoped<IFilmManager, FilmManager>();
             services.AddScoped<IUserFilmManager, UserFilmManager>();
+            services.AddScoped<ISelectionManager, SelectionManager>();
 
             services.AddScoped<ISameUsersAlgorithm, SameUsersAlgorithm>();
             services.AddScoped<IRandomFilmsAlgorithm, RandomFilmsAlgorithm>();
