@@ -67,7 +67,7 @@ namespace Services.Algorithms
             var user = _accountsCache.First(u => u.Id == userId);
 
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
-            Dictionary<Account, int> usersMatches = GetUsersWithSameLakes(user);
+            Dictionary<Account, int> usersMatches = GetUsersWithSameLikes(user);
 
             /* 2. Сортировка по совпадениям лайков и выбор ближайших соседей */
             Dictionary<Account, int> nearestToUser = usersMatches
@@ -90,7 +90,7 @@ namespace Services.Algorithms
         /// </summary>
         /// <param name="user">Пользователь, для которого подбирается фильм</param>
         /// <returns>Словарь вида "пользователь"-"количество общих лайков с пользователем для которого подбирается фильм"</returns>
-        private Dictionary<Account, int> GetUsersWithSameLakes(Account user)
+        private Dictionary<Account, int> GetUsersWithSameLikes(Account user)
         {
             // Ищем лайкнутые фильмы пользователя
             UserFilm[] userLikes = _likesRepo
@@ -150,7 +150,7 @@ namespace Services.Algorithms
         private List<Film> SelectFilms(Account user, Dictionary<Account, int> nearestToUser)
         {
             // Выясняем какие фильмы еще не оценивал (соответственно не смотрел) пользователь (посмотрел)
-            Film[] notLikedFilmsByUser = GetNotLikedFilmsByUser(user);
+            Film[] notLikedFilmsByUser = GetNotLikedFilmsByUser(user.Id);
 
             // Вводим счетчик лайков у этих фильмов ближайшими соседями этого пользователя
             Dictionary<Film, int> filmsLikes = new Dictionary<Film, int>();
@@ -194,33 +194,19 @@ namespace Services.Algorithms
         }
 
         /// <summary>
-        /// Выдает массив фильмов, которым ставил оценки конкретный пользователь
-        /// </summary>
-        /// <param name="user">конкретный пользовател</param>
-        /// <returns>Коллекция оцененных фильмов</returns>
-        private Film[] GetLikedFilmsByUser(Account user)
-        {
-            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id && x.IsLike != null).ToArray();
-            List<Film> filmsLikedByUser = new List<Film>();
-            foreach (var item in likesByUser)
-                filmsLikedByUser.Add(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));
-
-            return filmsLikedByUser.ToArray();
-        }
-
-        /// <summary>
         /// Выдает массив фильмов, которым НЕ ставил оценки конкретный пользователь
         /// </summary>
-        /// <param name="user">конкретный пользовател</param>
+        /// <param name="userId">конкретный пользовател</param>
         /// <returns>Коллекция оцененных фильмов</returns>
-        private Film[] GetNotLikedFilmsByUser (Account user)
+        private Film[] GetNotLikedFilmsByUser(string userId)
         {
-            UserFilm[] likesByUser = _likesCache.Where(x => x.User.Id == user.Id && x.IsLike != null).ToArray();
-            List<Film> filmsNotLikedByUser = new List<Film>(_filmsCache);
-            foreach (var item in likesByUser)
-                filmsNotLikedByUser.Remove(_filmsCache.FirstOrDefault(x => x.Id == item.Film.Id));
-
-            return filmsNotLikedByUser.ToArray();
+            return _filmsRepo
+                .Get()
+                .Include(f => f.Likes)
+                .Include(f => f.Preview) // ДЛЯ РАСЧЕТОВ НЕ НУЖНО И ОЧЕНЬ ЖИРНОЕ
+                .AsNoTracking()
+                .Where(f => !f.Likes.Where(l => l.UserId == userId && l.IsLike != null).Any())
+                .ToArray();
         }
     }
 }
