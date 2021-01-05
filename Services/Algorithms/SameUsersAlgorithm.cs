@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Core.Interfaces;
-using Infrastructure.Exceptions;
 using System;
 
 namespace Services.Algorithms
@@ -20,10 +19,6 @@ namespace Services.Algorithms
     {
         // Количество похожих по вкусу юзеров
         private static readonly int k = 1;
-
-        private Account[] _accountsCache;
-        private Film[] _filmsCache;
-        private UserFilm[] _likesCache;
 
         private IRepository<Account> _accountsRepo;
         private IRepository<Film> _filmsRepo;
@@ -50,21 +45,7 @@ namespace Services.Algorithms
 
             List<Film> result;
 
-            // 0. Вытаскивыние базы в кеш
-            _accountsCache = _accountsRepo.Get()
-                                        .Include(x => x.UserFilms)
-                                        .ToArray();
-            _filmsCache = _filmsRepo.Get()
-                                    .Include(x => x.Likes)
-                                    .Include(x => x.FilmsGenres)
-                                        .ThenInclude(x => x.Genre)
-                                    .Include(x => x.Preview)
-                                    .ToArray();
-            _likesCache = _likesRepo.Get().Include(x => x.Film)
-                                                    .Include(x => x.User)
-                                                    .ToArray();
-
-            var user = _accountsCache.First(u => u.Id == userId);
+            var user = _accountsRepo.Get().AsNoTracking().First(u => u.Id == userId);
 
             /* 1. Нахождение для каждого пользователя общих лайков с нашим пользователем*/
             Dictionary<Account, int> usersMatches = GetUsersWithSameLikes(user);
@@ -77,11 +58,6 @@ namespace Services.Algorithms
             /* 3. Выборка фильма для пользователя */
             result = SelectFilms(user, nearestToUser);
 
-            /* 4. Удаление из переменных класса ссылок на объекты таблиц для удаления сборщиком мусора*/
-            _accountsCache = null;
-            _filmsCache = null;
-            _likesCache = null;
-
             return result;
         }
 
@@ -93,26 +69,26 @@ namespace Services.Algorithms
         private Dictionary<Account, int> GetUsersWithSameLikes(Account user)
         {
             // Ищем лайкнутые фильмы пользователя
-            UserFilm[] userLikes = _likesRepo
+            List<Guid> userLikesFilmIds = _likesRepo
                 .Get()
-                //.Include(ul => ul.Film)
                 .AsNoTracking()
                 .Where(x => x.UserId == user.Id)
-                .ToArray();
-
-            List<Guid> userLikesFilmIds = userLikes.Select(ul => ul.FilmId).ToList();
+                .Select(ul => ul.FilmId)
+                .ToList();
 
             List<Film> filmsLikedByUser = _filmsRepo
                 .Get()
+                .AsNoTracking()
                 .Where(f => userLikesFilmIds.Contains(f.Id))
                 .ToList();
 
-            // Ищем совпадения лайков с другими пользователями
+            // Подготовка буферов для поиска совпадений лайков с другими пользователями
             Dictionary<Account, int> result = new Dictionary<Account, int>();
             int matches = 0;
             List<UserFilm> iterUserLikes;
             UserFilm sameLike;
 
+            // Вытаскиваем из бд для анализа только тех юзеров, которые имеют лайк (и не наш юзер)
             var accountsToAnalysis = _accountsRepo
                 .Get()
                 .Include(a => a.UserFilms)
@@ -120,6 +96,7 @@ namespace Services.Algorithms
                 .Where(a => a.Id != user.Id && a.UserFilms.Where(uf => uf.IsLike != null).Any())
                 .ToList();
 
+            // Непосредственно поиск совпадений лайков с другими пользователями
             foreach (Account iterUser in accountsToAnalysis)
             {
                 iterUserLikes = _likesRepo.Get()
@@ -162,7 +139,8 @@ namespace Services.Algorithms
                 rating = 0;
                 for (int k = 0; k < nearestToUser.Keys.Count; k++)
                 {
-                    UserFilm like = notLikedFilmsByUser[i].Likes.FirstOrDefault(l => l.IsLike != null && l.UserId == nearestToUser.Keys.ElementAt(k).Id);
+                    UserFilm like = notLikedFilmsByUser[i].Likes
+                        .FirstOrDefault(l => l.IsLike != null && l.UserId == nearestToUser.Keys.ElementAt(k).Id);
                     if (like != null && like.IsLike != null)
                     {
                         if ((bool)like.IsLike)
@@ -175,20 +153,11 @@ namespace Services.Algorithms
                 filmsLikes.Add(notLikedFilmsByUser[i], rating);
             }
 
-            // Сортируем получившийся словарь по убыванию рейтинга и даем первый элемент как результат
-            List<Film> result;
-            try
-            {
-                result = filmsLikes.OrderByDescending(x => x.Value)
-                                    .ToDictionary(x => x.Key, x => x.Value)
-                                    .Keys
-                                    .ToList();
-            }
-            catch(InvalidOperationException ex)
-            {
-                result = null;
-            }
-            return result;
+            // Сортируем получившийся словарь по убыванию рейтинга и даем отсортированную коллекцию как результат
+            return filmsLikes.OrderByDescending(x => x.Value)
+                                .ToDictionary(x => x.Key, x => x.Value)
+                                .Keys
+                                .ToList();
 
         }
 
