@@ -43,11 +43,12 @@ namespace Services.Managers
 
         public IList<Film> GetAllFilms()
         {
-            return this._filmsRepo
+            return _filmsRepo
                 .Get()
                 .Include(x => x.Preview)
                 .Include(x => x.FilmsGenres)
                     .ThenInclude(x => x.Genre)
+                .AsNoTracking()
                 .ToList();
         }
 
@@ -58,7 +59,21 @@ namespace Services.Managers
                 .Include(x => x.Preview)
                 .Include(x => x.FilmsGenres)
                     .ThenInclude(x => x.Genre)
+                .AsNoTracking()
                 .FirstOrDefault(x => x.Id == id);
+        }
+
+        public IList<Film> GetLikedByUserId(string userId)
+        {
+            return _filmsRepo
+                .Get()
+                .Include(f => f.Preview)
+                .Include(f => f.FilmsGenres)
+                    .ThenInclude(f => f.Genre)
+                .Include(f => f.Likes)
+                .AsNoTracking()
+                .Where(x => x.Likes.Where(l => l.UserId == userId && l.IsLike != null).Any())
+                .ToList();
         }
 
         public async Task<IList<Film>> GetRandomShakedFilms(string userId = null)
