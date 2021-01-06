@@ -10,6 +10,8 @@ using Infrastructure.Exceptions;
 using Services.Managers.Interfaces;
 using AutoMapper;
 using WebApi.ViewModels;
+using System.Linq;
+using Infrastructure.Auth;
 
 namespace WebApi.Controllers
 {
@@ -37,14 +39,29 @@ namespace WebApi.Controllers
 
         // GET: api/Accounts/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Account>> GetAccount(string id)
+        [Authorize]
+        public async Task<ActionResult<AccountViewModel>> GetAccount(string id)
         {
             var account = await _accountManager.GetUserById(id);
 
             if (account == null)
                 return NotFound();
 
-            return account;
+            return _mapper.Map<Account, AccountViewModel>(account);
+        }
+
+        // GET: api/Accounts/self
+        [HttpGet("self")]
+        [Authorize]
+        public async Task<ActionResult<AccountViewModel>> GetSelfAccount()
+        {
+            var userId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == AuthExtensions.UserId).Value;
+            var account = await _accountManager.GetUserById(userId);
+
+            if (account == null)
+                return NotFound();
+
+            return _mapper.Map<Account, AccountViewModel>(account);
         }
 
         // POST: api/Accounts/login
@@ -91,8 +108,25 @@ namespace WebApi.Controllers
         [Authorize]
         public async Task<ActionResult<AccountViewModel>> PutAccount(string id, AccountViewModel accountVM)
         {
+            var requestingUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == AuthExtensions.UserId).Value;
+            // Добавить еще и случай если админ
+            if (id != requestingUserId)
+                throw new PermissionException("Недостаточно прав");
+
             var account = _mapper.Map<AccountViewModel, Account>(accountVM);
             var updatedUser = await _accountManager.UpdateAsync(id, account);
+            var result = _mapper.Map<Account, AccountViewModel>(updatedUser);
+            return result;
+        }
+
+        // PUT: api/Accounts/self
+        [HttpPut("self")]
+        [Authorize]
+        public async Task<ActionResult<AccountViewModel>> PutSelfAccount(AccountViewModel accountVM)
+        {
+            var requestingUserId = HttpContext.User.Claims.FirstOrDefault(c => c.Type == AuthExtensions.UserId).Value;
+            var account = _mapper.Map<AccountViewModel, Account>(accountVM);
+            var updatedUser = await _accountManager.UpdateAsync(requestingUserId, account);
             var result = _mapper.Map<Account, AccountViewModel>(updatedUser);
             return result;
         }

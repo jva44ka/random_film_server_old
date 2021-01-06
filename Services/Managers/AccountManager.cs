@@ -88,11 +88,11 @@ namespace Services.Managers
             if (user == null)
                 throw new NotExistsException($"User {id} is not exists");
 
-            user.FirstName = account.FirstName;
-            user.LastName = account.LastName;
-            user.UserName = account.UserName;
-            user.PhoneNumber = account.PhoneNumber;
-            user.Email = account.Email;
+            user.FirstName = account.FirstName ??= user.FirstName;
+            user.LastName = account.LastName ??= user.LastName;
+            user.UserName = account.UserName ??= user.UserName;
+            user.PhoneNumber = account.PhoneNumber ??= user.PhoneNumber;
+            user.Email = account.Email ??= user.Email;
 
             var result = _accountsRepo.Update(user);
             await _accountsRepo.SaveAsync();
