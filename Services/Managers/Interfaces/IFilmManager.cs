@@ -10,6 +10,7 @@ namespace Services.Managers.Interfaces
         IList<Film> GetAllFilms();
         Film GetFilmById(Guid id);
         IList<Genre> GetGenres(Guid id);
+        IList<Film> GetLikedByUserId(string userId);
         Task<bool?> IsLiked(string userId, Guid filmId);
         Task<Film> CreateAsync(Film film);
         Task<Film> UpdateAsync(Guid id, Film film);
