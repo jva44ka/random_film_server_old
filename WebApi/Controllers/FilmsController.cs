@@ -92,6 +92,17 @@ namespace WebApi.Controllers
             return result;
         }
 
+        [HttpGet("likedfilms")]
+        [Authorize]
+        public async Task<IList<FilmViewModel>> GetLikedFilms()
+        {
+            var userId = HttpContext.User.Claims.Single(c => c.Type == AuthExtensions.UserId).Value;
+            var films = _filmManager.GetLikedByUserId(userId);
+            var filmsVM = _mapper.Map<IList<Film>, IList<FilmViewModel>>(films);
+            var result = await MapFilms(filmsVM, userId);
+            return result;
+        }
+
         // GET: api/films/selections
         [HttpGet("selections")]
         public async Task<GetSelectionsResult> GetSelections()
